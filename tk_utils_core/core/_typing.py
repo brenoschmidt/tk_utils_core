@@ -51,8 +51,9 @@ import pandas as pd
 from pydantic import (
         AfterValidator,
         Field,
-        Unset,
-        UNSET,
+        )
+from pydantic.fields import (
+        _Unset,
         )
 
 
@@ -120,21 +121,21 @@ AtomicTypes = ScalarLike | Union[
 # ----------------------------------------------------------------------------
 #   Sentinel unset type 
 # ----------------------------------------------------------------------------
-#class UnsetType:
-#
-#    def __repr__(self):
-#        return "<UNSET>"
-#
-#    def __bool__(self):
-#        return False
-#
-#    def __eq__(self, other):
-#        raise TypeError("Use `is UNSET` to check for unset values, not `==`")
-#
-#    def __ne__(self, other):
-#        raise TypeError("Use `is not UNSET` to check for unset values, not `!=`")
-#
-#UNSET = UnsetType()
+class UnsetType:
+
+    def __repr__(self):
+        return "<UNSET>"
+
+    def __bool__(self):
+        return False
+
+    def __eq__(self, other):
+        raise TypeError("Use `is UNSET` to check for unset values, not `==`")
+
+    def __ne__(self, other):
+        raise TypeError("Use `is not UNSET` to check for unset values, not `!=`")
+
+UNSET = UnsetType()
 
 
 
