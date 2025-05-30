@@ -1,0 +1,33 @@
+[build-system]
+requires = [
+    "hatchling",
+    "pydantic>=2,<3",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "tk_utils_core"
+version = "0.0.1"
+description = "Core utilities for the Toolkit for Finance course at UNSW"
+readme = "README.md"
+authors = [
+  { name = "Breno Schmidt", email = "breno.schmidt@unsw.edu.au" },
+]
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "pandas",
+    "requests",
+    "ruamel.yaml",
+    "pydantic>=2,<3",
+]
+
+[project.urls]
+homepage = "https://github.com/brenoschmidt/tk_utils_core"
+

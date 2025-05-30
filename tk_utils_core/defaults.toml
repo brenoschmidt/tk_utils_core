@@ -1,0 +1,17 @@
+# ----------------------------------------------------------------------------
+#   Configuration file for the tk_utils_core module 
+# ----------------------------------------------------------------------------
+debug = false
+
+[pretty_errors]
+pretty_errors = true
+line_number_first = false
+display_link = true
+
+[doctests]
+print_docstring = false
+print_examples = true
+print_hdr = true
+print_mod = false
+verbose = false
+compileflags = false
