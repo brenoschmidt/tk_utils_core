@@ -54,7 +54,7 @@ def all_parents(path: pathlib.Path) -> list[pathlib.Path]:
     return [pathlib.Path('.')] + parts + [path]
 
 
-class TreeChecker:
+class PathsChecker:
     """
     Ensure the proper location of files and folders relative to a base folder
 
