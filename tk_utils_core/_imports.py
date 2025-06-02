@@ -1,13 +1,10 @@
-""" API
+""" 
+API
 
          
 """
 from __future__ import annotations
 
-
-from functools import (
-        cached_property,
-        )
 from .core._typing import (
         UNSET,
         )

@@ -15,3 +15,42 @@ print_hdr = true
 print_mod = false
 verbose = false
 compileflags = false
+
+[pp]
+color=""
+indent=""
+pretty=true
+sort_dicts=false
+depth=""
+underscore_numbers=true
+width=40
+compact=false
+
+[pycharm]
+validate_paths=true
+[pycharm.dirnames]
+backup="_backup"
+dropbox="_dropbox"
+venv=".venv"
+tk_utils="tk_utils"
+prj_root="toolkit"
+[pycharm.filenames]
+toolkit_config="toolkit_config.py"
+[pycharm.tk_utils]
+config="config.toml"
+
+[github]
+[github.tk_utils]
+user="brenoschmidt"
+repo="toolkit"
+base="main/tk_utils"
+modules=[
+    "__init__.py",
+    "setup.py",
+    ]
+[github.tk_utils_core]
+user="brenoschmidt"
+repo="tk_utils_core"
+
+[dropbox]
+url=""
