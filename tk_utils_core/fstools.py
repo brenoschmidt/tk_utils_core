@@ -1,15 +1,33 @@
 """ 
-IO utils
+File system utils
 
          
 """
 from __future__ import annotations
 
-import pathlib
 import os
+import pathlib
+import shutil
 import zipfile
 
-class ZipFile(zipfile.ZipFile):
+from .core.fstools.safeio import (
+        copy_with_parents,
+        safe_copy,
+        safe_copytree,
+        )
+from .core.fstools.walk import walk 
+
+
+__all__ = [
+        'copy_with_parents',
+        'safe_copy',
+        'safe_copytree',
+        'walk',
+        'unzip',
+        ]
+
+
+class _ZipFile(zipfile.ZipFile):
     """ 
     Patched ZipFile class to prevent errors of the type
 
@@ -46,15 +64,7 @@ def unzip(src: str | pathlib.Path, dst: str | pathlib.Path):
         with zipfile.ZipFile(tmp) as zf:
             zf.extractall(dst)
     except ValueError:
-        with ZipFile(tmp) as zf:
+        with _ZipFile(tmp) as zf:
             zf.extractall(dst)
-
-
-
-
-
-
-
-
 
 
