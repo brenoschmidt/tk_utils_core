@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import copy
+from types import SimpleNamespace
 import dataclasses as dc
 import pathlib
 import re
@@ -356,6 +357,39 @@ def human2bytes(s: str, base: int = 1024) -> int:
     return int(size * (base ** pwr))
 
 
+
+
+
+def to_namespace(base: MutableMapping) -> SimpleNamespace:
+    """
+    Recursively convert a nested dictionary into a SimpleNamespace.
+
+    Each dictionary becomes a SimpleNamespace, allowing attribute-style access.
+    Other values are kept unchanged.
+
+    Parameters
+    ----------
+    base : MutableMapping
+        A (possibly nested) dictionary to convert.
+
+    Returns
+    -------
+    SimpleNamespace
+        A SimpleNamespace version of the input mapping.
+
+    Examples
+    --------
+    >>> ns = to_namespace({'a': 1, 'b': {'c': 2}})
+    >>> ns.a
+    1
+    >>> ns.b.c
+    2
+    """
+    out = {
+        k: to_namespace(v) if isinstance(v, MutableMapping) else v
+        for k, v in base.items()
+    }
+    return SimpleNamespace(**out)
 
 
 

@@ -6,12 +6,239 @@ Utilities for representing objects as strings in diagnostic messages
 from __future__ import annotations
 
 import textwrap
-
+from functools import lru_cache
+from collections.abc import Sequence
 from typing import (
         Iterable,
         Callable,
         )
 
+
+@lru_cache(maxsize=4)
+def _map_justify(how: str) -> str:
+    """
+    Map justification keyword to string format specifier.
+
+    Parameters
+    ----------
+    how : {'left', 'right', 'center'}
+        Justification direction.
+
+    Returns
+    -------
+    str
+        Format specifier: '<', '>', or '^'.
+
+    Raises
+    ------
+    ValueError
+        If `how` is not a supported justification method.
+
+    """
+    fmt = {'left': '<', 'right': '>', 'center': '^'}
+    if how not in fmt:
+        raise ValueError(
+                f"Invalid how: {how!r}. " 
+                "Should be one of 'left', 'right', 'center'")
+    return fmt[how]
+
+def justify_values(
+        values: Iterable[str],
+        how: str) -> tuple[str, ...]:
+    """
+    Justify values using standard text alignment.
+
+    Parameters
+    ----------
+    values : Iterable[str]
+        Sequence of strings to justify.
+
+    how : {'left', 'right', 'center'}
+        Direction of justification.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Aligned strings with uniform width.
+
+    Examples
+    --------
+    >>> justify_values(['a', 'bbb', 'cc'], how='left')
+    ('a  ', 'bbb', 'cc ')
+
+    >>> justify_values(['a', 'bbb', 'cc'], how='right')
+    ('  a', 'bbb', ' cc')
+
+    >>> justify_values(['a', 'bbb', 'cc'], how='center')
+    (' a ', 'bbb', 'cc ')
+    """
+    width = max(len(v) for v in values)
+    fmt = _map_justify(how)
+    return tuple(f'{v:{fmt}{width}}' for v in values)
+
+def align_by_char(
+        values: Iterable[str],
+        char: str,
+        how: str = 'left') -> tuple[str, ...]:
+    """
+    Align strings on the first occurrence of a given character.
+
+    Parameters
+    ----------
+    values : Iterable[str]
+        Sequence of strings.
+
+    char : str
+        Character to align by.
+
+    how : {'left', 'right', 'center'}, default = 'left'
+        Determines how to align content around the character:
+        - 'left' aligns the left part and pads the right.
+        - 'right' aligns the right part and pads the left.
+        - 'center' centers the character.
+
+    Returns
+    -------
+    tuple[str, ...]
+        Strings aligned so that the alignment character lines up.
+
+    Examples
+    --------
+    >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='left')
+    (' abc:def', '   a:xxx', '   long  ')
+
+    >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='right')
+    ('abc:def ', '  a:xxx ', '    long')
+
+    >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='center')
+    (' abc:def ', '  a:xxx ', '   long   ')
+    """
+    values = tuple(values)
+    splits = []
+    for v in values:
+        if char in v:
+            l, r = v.split(char, 1)
+        else:
+            l, r = v, ''
+        splits.append((l, r))
+
+    left_width = max(len(l) for l, _ in splits)
+    right_width = max(len(r) for _, r in splits)
+
+    result = []
+    for l, r in splits:
+        if how == 'left':
+            result.append(f"{l.rjust(left_width)}{char}{r.ljust(right_width)}")
+        elif how == 'right':
+            result.append(f"{l.rjust(left_width)}{char}{r.ljust(right_width)}".rjust(left_width + right_width + 1))
+        elif how == 'center':
+            total_width = left_width + right_width + 1
+            content = f"{l.rjust(left_width)}{char}{r.ljust(right_width)}"
+            result.append(content.center(total_width))
+        else:
+            raise ValueError(f"Invalid how: {how!r}")
+    return tuple(result)
+
+def align(
+        tups: Iterable[str | tuple[str, ...]], 
+        min_width: int = 0,
+        sep: str = ' ',
+        how: str | Sequence[str] = 'left',
+        char: str | Sequence[str] | None = None,
+        strip: bool = True) -> str:
+    """
+    Align a sequence of string tuples into a formatted text table.
+
+    Each element of `tups` can be a string or a tuple of strings. Shorter
+    tuples are padded with empty strings to match the widest row. Strings are
+    treated as single-element rows.
+
+    Parameters
+    ----------
+    tups : Iterable[str | tuple[str, ...]]
+        Sequence of rows to align. Each row may be a string or tuple of strings.
+
+    min_width : int, default = 0
+        Minimum width for each column.
+
+    sep : str, default = ' '
+        Separator to join columns.
+
+    how : str or Sequence[str], default = 'left'
+        Justification for each column ('left', 'right', 'center').
+
+    char : str or Sequence[str], optional
+        Character to align within each column (e.g. '.', ':').
+
+    strip : bool, default = True
+        Whether to strip whitespace from input values.
+
+    Returns
+    -------
+    str
+        Aligned string with one row per line.
+
+    Examples
+    --------
+    >>> align([('a', '1.2'), ('bb', '22.22')])
+    'a  1.2  \\nbb 22.22'
+
+    >>> align(['x', 'yy', 'zzz'], how='right')
+    '  x\\n yy\\nzzz'
+
+    >>> align([('a', '1.2'), ('bb', '22.22')], char='.')
+    'a  1.2 \\nbb 22.22'
+
+    >>> align([('abc:def',), ('a:xxx',), ('long',)], char=':', how='left')
+    ' abc:def\\n   a:xxx\\n   long  '
+
+    >>> align([('abc:def',), ('a:xxx',), ('long',)], char=':', how='right')
+    'abc:def \\n  a:xxx \\n    long'
+    """
+
+    # Normalize input rows
+    rows = []
+    ncols = 0
+    for row in tups:
+        cells = (row,) if isinstance(row, str) else row
+        if strip:
+            cells = tuple(c.strip() for c in cells)
+        else:
+            cells = tuple(cells)
+        rows.append(cells)
+        ncols = max(ncols, len(cells))
+
+    # Normalize per-column alignment rules
+    def resolve(rule, default):
+        if isinstance(rule, str) or rule is None:
+            return [rule] * ncols
+        if isinstance(rule, Sequence):
+            return list(rule) + [default] * (ncols - len(rule))
+        raise TypeError(f"Expected string or sequence, got {type(rule)}")
+
+    hows = resolve(how, 'left')
+    chars = resolve(char, None)
+
+    # Pad rows and transpose to columns
+    padded = [row + ('',) * (ncols - len(row)) for row in rows]
+    columns = list(zip(*padded))
+
+    # Align each column
+    aligned_cols = []
+    for col, h, c in zip(columns, hows, chars):
+        col_values = col
+        if min_width:
+            width = max(min_width, max(len(v) for v in col_values))
+            col_values = tuple(f'{v:<{width}}' for v in col_values)
+        if h is not None:
+            col_values = justify_values(col_values, h)
+        if c is not None:
+            col_values = align_by_char(col_values, char=c, how=h or 'left')
+        aligned_cols.append(col_values)
+
+    # Transpose back to rows
+    final_rows = zip(*aligned_cols)
+    return '\n'.join(sep.join(row) for row in final_rows)
 
 def get_type_name(typ: type) -> str:
     """
@@ -35,7 +262,6 @@ def get_type_name(typ: type) -> str:
     'NoneType'
     """
     return typ.__name__ if hasattr(typ, "__name__") else str(typ)
-
 
 def fmt_type(typ: type, quotes: str = "'") -> str:
     """
@@ -62,7 +288,6 @@ def fmt_type(typ: type, quotes: str = "'") -> str:
     """
     return f"{quotes}{get_type_name(typ)}{quotes}"
 
-
 def fmt_name(name: str, quotes: str = '`') -> str:
     """
     Format a name string with quote characters.
@@ -87,7 +312,6 @@ def fmt_name(name: str, quotes: str = '`') -> str:
     '"value"'
     """
     return f"{quotes}{name}{quotes}"
-
 
 def join_names(
         names: str | Iterable[str],
@@ -150,8 +374,6 @@ def join_names(
         return f"{formatted[0]} {conjunction} {formatted[1]}"
     return ", ".join(formatted[:-1]) + f", {conjunction} {formatted[-1]}"
 
-
-
 def fmt_str(
         s: str,
         width: int | None = None,
@@ -206,7 +428,6 @@ def fmt_str(
     )
 
     return wrapper.fill(text)
-
 
 def fmt_value(
         value: object,

@@ -1,8 +1,6 @@
 """ 
 Validators
 
-
-         
 """
 from __future__ import annotations
 
@@ -80,13 +78,15 @@ def is_namedtuple(obj: Any) -> bool:
             and hasattr(obj, '_asdict') 
             and hasattr(obj, '_fields'))
 
-def is_pydantic_dc(obj):
+def is_pydantic_dc(obj) -> bool:
     """
+    Return True if a pydantic dataclass
     """
     return pydantic.dataclasses.is_pydantic_dataclass(obj)
 
-def is_pydantic_model(obj):
+def is_pydantic_model(obj) -> bool:
     """
+    Return True if a pydantic model
     """
     return isinstance(obj, pydantic.BaseModel)
 

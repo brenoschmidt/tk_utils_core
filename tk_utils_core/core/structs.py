@@ -9,7 +9,7 @@ import json
 import copy as _copy
 import pathlib
 import re
-from pprint import pformat
+from types import SimpleNamespace
 from typing import (
         TYPE_CHECKING,
         Any,
@@ -26,7 +26,8 @@ from pydantic import (
         field_validator,
         model_validator,
         )
-from ._typing import MutableMapping
+from ._typing import MutableMapping, ScalarLike
+from .converters import as_set
 
 
 # Regex used to map validation errors
@@ -69,8 +70,6 @@ def _parse_validation_error(e: ValidationError):
     msgs = [f"{k}: {' OR '.join(v)}" for k, v in parm_err.items()]
     return (ex, '\n'.join(msgs))
 
-
-
 class _BaseModel(BaseModel):
     """
     Base model with better representation and error messages
@@ -103,9 +102,6 @@ class _BaseModel(BaseModel):
             except ValidationError as e:
                 (ex, msg) = _parse_validation_error(e)
                 raise ex(msg) from None
-
-
-
 
 def _validate_model_updates(model: BaseModel, updates: dict[str, Any]) -> None:
     """
@@ -142,7 +138,6 @@ def _validate_model_updates(model: BaseModel, updates: dict[str, Any]) -> None:
         if isinstance(current, BaseModel) and isinstance(value, dict):
             _validate_model_updates(current, value)
 
-
 def _update_model_copy(
         model: BaseModel,
         updates: dict[str, Any],
@@ -176,7 +171,6 @@ def _update_model_copy(
         else:
             d[field_name] = new_value
     return model.__class__(**d)
-
 
 class BaseConfig(_BaseModel):
     """
@@ -305,15 +299,10 @@ class BaseConfig(_BaseModel):
                 setattr(self, k, v)
         self._context_depth -= 1
 
-
-
-
-
 class BaseParms(BaseConfig):
     """ 
     Base model for parameters
     """
-
 
 class BaseFrozenParms(_BaseModel):
     """ 
@@ -335,63 +324,162 @@ class BaseFrozenParms(_BaseModel):
                     validate_default=False,
                     )
 
-def deep_update(
-        obj: MutableMapping, 
-        other: MutableMapping,
-        ) -> MutableMapping:
+def obj_dot_get(obj: object, attr: str) -> Any:
     """
-    Update mutable maps, recursively
+    Safely retrieve a nested attribute using dot notation.
+    Returns None if any intermediate attribute is missing.
+    """
+    for name in attr.split('.'):
+        if not hasattr(obj, name):
+            return None
+        obj = getattr(obj, name)
+    return obj
+
+def obj_dot_update(
+        obj: object,
+        attr: str,
+        value: Any) -> None:
+    """
+    Update a (potentially nested) object using dot-separated attribute names.
+
+    This function only updates the attribute if all intermediate attributes
+    exist. If any attribute in the chain is missing, nothing is changed.
 
     Parameters
     ----------
-    obj: MutableMapping
-        Object to be updated
+    obj : object
+        The object to update.
 
-    other: MutableMapping
-        Updating object
+    attr : str
+        Dot-separated attribute name, e.g., "a.b.c".
 
+    value : Any
+        Value to assign to the final attribute.
+    """
+    attrs = attr.split(".")
+    current = obj
+    for a in attrs[:-1]:
+        if not hasattr(current, a):
+            return  # Abort early if any attribute in chain is missing
+        current = getattr(current, a)
+    if hasattr(current, attrs[-1]):
+        setattr(current, attrs[-1], value)
 
-    Examples
-    --------
-    >>> from tk_core.utils import deep_update
+def get_all_dot_attrs(
+        obj: object,
+        prefix: str = "",
+        *,
+        skip_private: bool = True,
+        force_public: list[str] | None = None,
+        max_depth: int | None = None,
+        _depth: int = 0) -> list[str]:
+    """
+    Recursively collect dot-notated attribute paths from an object.
 
-    >>> dic = {'a': {'b': 1, 'c': 2}}
-    >>> dic.update({'a': {'c': 99}}) # Normal update
-    >>> print(dic)
-    {'a': {'c': 99}}
+    Parameters
+    ----------
+    obj : object
+        The object to inspect.
 
-    >>> dic = {'a': {'b': 1, 'c': 2}}
-    >>> dic = deep_update(dic, {'a': {'c': 99}}) 
-    >>> print(dic)
-    {'a': {'b': 1, 'c': 99}}
+    prefix : str, default ""
+        The prefix to prepend to attribute names (used for recursion).
 
-    >>> dic = {'a': {'b': 1, 'c': 2}}
-    >>> dic = deep_update(dic, {'a': {'d': 99}}) 
-    >>> print(dic)
-    {'a': {'b': 1, 'c': 2, 'd': 99}}
+    skip_private : bool, default True
+        If True, skips attributes starting with an underscore.
 
-    >>> dic = {'a': {'b': 1, 'c': 2}}
-    >>> dic = deep_update(dic, {'a': 1}) # Like dict.update 
-    >>> print(dic)
-    {'a': 1}
+    max_depth : int or None, default None
+        If set, limits recursion depth to this many levels.
 
-    Notes
-    -----
-    Adapted from pydantic.utils.deep_update
+    force_public: list[str], optional
+        If given, attributes will be included even if they start with
+        an underscore and skip_private is True
+    _depth : int
+        Internal parameter used for recursive depth tracking.
+
+    Returns
+    -------
+    list of str
+        Dot-notated attribute names, e.g. ['a.b', 'a.c.d']
+    """
+    if max_depth is not None and _depth >= max_depth:
+        return []
+
+    force_public = as_set(force_public, none_as_empty=True)
+
+    result = []
+    for name in dir(obj):
+        if skip_private and name.startswith("_") and name not in force_public:
+            continue
+        try:
+            val = getattr(obj, name)
+        except Exception:
+            continue  # avoid triggering properties or descriptors
+
+        full_name = f"{prefix}.{name}" if prefix else name
+        if hasattr(val, "__dict__") and not isinstance(val, ScalarLike):
+            result.extend(
+                get_all_dot_attrs(
+                    val, 
+                    prefix=full_name, 
+                    skip_private=skip_private,
+                    force_public=force_public,
+                    max_depth=max_depth, _depth=_depth + 1)
+            )
+        else:
+            result.append(full_name)
+    return result
+
+def obj_dot_delete(obj: object, attr: str) -> None:
+    """
+    Delete a nested attribute if all parents exist and the final attr is
+    present.
+    """
+    parts = attr.split(".")
+    for name in parts[:-1]:
+        if not hasattr(obj, name):
+            return
+        obj = getattr(obj, name)
+    if hasattr(obj, parts[-1]):
+        delattr(obj, parts[-1])
+
+def obj_dot_subset(
+        obj: object,
+        force_public: list[str] | None = None, 
+        includes: list[str] | None = None,
+        excludes: list[str] | None = None,
+        ) -> object:
+    """
+    Return a deep copy of the object with a subset of attributes using dot
+    notation.
+
+    Attributes not in `includes` or in `excludes` will be removed.
 
     """
-    if hasattr(obj, 'copy'):
-        updated_obj = obj.copy()
+    out = _copy.deepcopy(obj)
+    all_attrs = set(get_all_dot_attrs(
+        out, 
+        force_public=force_public,
+        ))
+    if includes is not None:
+        includes = as_set(includes, none_as_empty=False)
+        invalid = [x for x in includes if x not in all_attrs]
+        if len(invalid) > 0:
+            raise ValueError(
+                    f"The following `includes` are not in `obj`"
+                    f"{str(invalid)}")
+
+        keep = includes
+                
     else:
-        updated_obj = _copy.copy(obj)
+        keep = all_dirs
 
-    for k, v in other.items():
-        if (k in updated_obj 
-            and isinstance(updated_obj[k], MutableMapping) 
-            and isinstance(v, MutableMapping)):
-            updated_obj[k] = deep_update(updated_obj[k], v)
-        else:
-            updated_obj[k] = v
-    return updated_obj
+    if excludes is not None:
+        excludes = as_set(excludes, none_as_empty=False)
+        keep -= excludes
+    
 
+    for attr in all_attrs:
+        if attr not in keep:
+            obj_dot_delete(out, attr)
+    return out
 

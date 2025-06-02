@@ -65,6 +65,16 @@ PathInput = Annotated[
     AfterValidator(lambda pth: pathlib.Path(pth) if isinstance(pth, str) else pth)
 ]
 
+# These are used to convert from TOML config entries
+TOMLStrOrNone = Annotated[
+    str | None,
+    AfterValidator(lambda x: x if x else None)
+]
+TOMLIntOrNone = Annotated[
+    int | str | None,
+    AfterValidator(lambda x: int(x) if x else None)
+]
+
 # ----------------------------------------------------------------------------
 #   Custom types 
 # ----------------------------------------------------------------------------

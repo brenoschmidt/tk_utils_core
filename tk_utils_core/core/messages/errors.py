@@ -52,7 +52,6 @@ def fmt_valid_types(types: type | Iterable[type], **kargs) -> str:
     out = join_names((fmt_type(t) for t in types), conjunction="or")
     return fmt_str(out, **kargs)
 
-
 def fmt_valid_values(values: Iterable[Any], **kargs) -> str:
     """
     Format a set of valid values into a readable string.
@@ -84,14 +83,12 @@ def fmt_valid_values(values: Iterable[Any], **kargs) -> str:
     out = join_names((fmt_value(x) for x in values), conjunction="or")
     return fmt_str(out, **kargs)
 
-
 def type_err_msg(
         name: str,
         typ: type,
         valid_types: type | Iterable[type],
         value: Any | None = None,
-        **kargs
-        ) -> str:
+        **kargs) -> str:
     """
     Format an error message for an invalid type.
 
@@ -126,7 +123,6 @@ def type_err_msg(
         _value = fmt_value(value)
         msg += f" (value: {_value})"
     return fmt_str(msg, **kargs)
-
 
 def value_err_msg(
         name: str,

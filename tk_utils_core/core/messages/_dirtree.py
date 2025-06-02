@@ -31,7 +31,6 @@ def _as_path(pth: str | pathlib.Path) -> pathlib.Path:
     """
     return pathlib.Path(pth) if not isinstance(pth, pathlib.Path) else pth
 
-
 class Branch:
     """
     Represents a single entry (file or directory) in the tree.
@@ -49,6 +48,8 @@ class Branch:
         self.parts = self.rpth.parts
         self.is_dir = pth.is_dir()
         self.key = '/'.join(self.parts)
+        if self.key == '':
+            self.key = '.'
         self.note = note
         self.name = pth.name
         self.branch_level = len(self.parts) - 1
@@ -66,10 +67,11 @@ class Branch:
         else:
             self.branch = BRANCH_SEP * self.branch_level + BRANCH_END + name
 
-
 class DirTree:
     """
-    Constructs a directory tree representation with optional notes and directory overrides.
+    Constructs a directory tree representation with optional notes and
+    directory overrides.
+
     """
 
     def __init__(
@@ -84,6 +86,8 @@ class DirTree:
         self.paths = [_as_path(x) for x in paths]
         self.notes = {} if notes is None else notes
         self.dirs = set(dirs) if dirs is not None else set()
+        self.dirs = set(str(x) for x in self.dirs)
+        self.dirs.add('.') # root is always a dir
         self.note_align_width = note_align_width
 
     @cached_property
@@ -129,14 +133,13 @@ class DirTree:
 
         return '\n'.join(tree)
 
-
 def dirtree(
     root: pathlib.Path,
     paths: Iterable[str | pathlib.Path],
     dirs: Iterable[str] | None,
     notes: dict[str, str] | None,
-    note_align_width: int = 0,
-) -> str:
+    excludes: Iterable[str | pathlib.Path] | None = None,
+    note_align_width: int = 0) -> str:
     """
     Generate a formatted directory tree string from the given paths.
 
@@ -157,6 +160,10 @@ def dirtree(
     note_align_width : int
         Maximum width used for aligning notes in the output.
 
+    excludes: Iterable[str], optional
+        If given, exclude any relative path or ancestors with these names 
+        are excluded
+
     Returns
     -------
     str
@@ -164,6 +171,14 @@ def dirtree(
     """
     root = _as_path(root)
     paths = [_as_path(x) for x in paths]
+
+    if excludes is not None:
+        if isinstance(excludes, str):
+            excludes = set([excludes])
+        else:
+            excludes = set(excludes)
+        paths = [x for x in paths if \
+                set(x.relative_to(root).parts).isdisjoint(excludes)]
     tree = DirTree(
         root=root,
         paths=paths,
