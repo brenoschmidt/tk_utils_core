@@ -6,7 +6,6 @@ Github utils
 from __future__ import annotations
 
 
-
 def git_url(user: str, repo: str):
     return f"https://github.com/{user}/{repo}.git"
 
