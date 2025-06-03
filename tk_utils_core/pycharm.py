@@ -391,9 +391,8 @@ class SysUtils:
             If the Dropbox URL is missing or improperly configured.
         """
         _paths = self.tkpaths.paths
+        if url is None and defaults.dropbox.url is None:
 
-        url = (url or getattr(defaults.dropbox, "url", "")).strip()
-        if not url:
             cfg = _paths.tk_utils_config.relative_to(_paths.root)
             raise ValueError("\n".join([
                 "Missing Dropbox URL in your configuration.",
@@ -411,6 +410,9 @@ class SysUtils:
                 "It should start with:",
                 "  https://www.dropbox.com/...",
             ]))
+
+        elif url is None:
+            url = defaults.dropbox.url
 
         self.tkpaths.validate_dropbox()
         dst = _paths.dropbox_zip
