@@ -16,6 +16,10 @@ from .core.fstools.safeio import (
         safe_copytree,
         )
 from .core.fstools.walk import walk 
+from .core.fstools._fstools import (
+        add_parents,
+        add_parents_to_paths,
+        )
 
 
 __all__ = [
@@ -24,7 +28,10 @@ __all__ = [
         'safe_copytree',
         'walk',
         'unzip',
+        'add_parents',
+        'add_parents_to_paths',
         ]
+
 
 
 class _ZipFile(zipfile.ZipFile):
@@ -61,10 +68,10 @@ def unzip(src: str | pathlib.Path, dst: str | pathlib.Path):
 
     """
     try:
-        with zipfile.ZipFile(tmp) as zf:
+        with zipfile.ZipFile(src) as zf:
             zf.extractall(dst)
     except ValueError:
-        with _ZipFile(tmp) as zf:
+        with _ZipFile(src) as zf:
             zf.extractall(dst)
 
 

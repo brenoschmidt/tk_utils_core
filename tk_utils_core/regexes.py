@@ -35,6 +35,17 @@ class Regexes:
     __slots__ = ()
 
     @cached_property
+    def rquotes(self) -> re.Pattern:
+        """
+        Return a compiled regex pattern that matches single or double quote characters.
+
+        Matches:
+            - Single quote: '
+            - Double quote: "
+        """
+        return re.compile(r'''["']''')
+
+    @cached_property
     def rspc(self) -> re.Pattern:
         """
         Match exactly one space character.
