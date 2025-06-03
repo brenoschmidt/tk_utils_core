@@ -563,7 +563,7 @@ class SysUtils:
         # Force showing folder if this is the first backup
         if not _paths.backup.exists():
             show_folder = True
-        elif len(x for x in _paths.backup.iterdir() if x.is_dir) == 0:
+        elif len([x for x in _paths.backup.iterdir() if x.is_dir]) == 0:
             show_folder = True
 
         self.tkpaths.validate_backup()
