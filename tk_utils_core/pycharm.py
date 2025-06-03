@@ -662,6 +662,10 @@ class SysUtils:
         self.tkpaths.validate_venv()
         self._update_tk_utils()
         self._reinstall_tk_utils_core()
+        msg = [
+                'PLEASE START A NEW INTERACTIVE SESSION',
+                ]
+        print(fmt_msg(msg, as_hdr=True))
 
 def create_venv(
         env_dir: str | pathlib.Path,
