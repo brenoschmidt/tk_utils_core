@@ -436,6 +436,8 @@ class SysUtils:
         if tmp != dst:
             tmp.rename(dst)
 
+        print("Done")
+
     def copy_new_files(self):
         """
         Copy all new files from the shared Dropbox folder to the current
