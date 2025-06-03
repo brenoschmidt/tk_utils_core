@@ -74,6 +74,10 @@ TOMLIntOrNone = Annotated[
     int | str | None,
     AfterValidator(lambda x: int(x) if x else None)
 ]
+ListOfStr = Annotated[
+    str | list[str] | tuple[str],
+    AfterValidator(lambda x: list(x) if isinstance(x, str) else x)
+]
 
 # ----------------------------------------------------------------------------
 #   Custom types 

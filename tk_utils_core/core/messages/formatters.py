@@ -5,9 +5,11 @@ Utilities for representing objects as strings in diagnostic messages
 """
 from __future__ import annotations
 
-import textwrap
-from functools import lru_cache
+from collections import namedtuple
 from collections.abc import Sequence
+from functools import lru_cache
+import datetime as dt
+import textwrap
 from typing import (
         Iterable,
         Callable,
@@ -476,5 +478,65 @@ def fmt_value(
         return "" if none_as_empty else "None"
     out = representer(value)
     return fmt_str(out, **kargs) if len(kargs) > 0 else out
+
+
+
+def tdelta_to_ntup(elapsed: dt.timedelta) -> namedtuple:
+    """
+    Convert a timedelta into a named tuple of time components.
+
+    Parameters
+    ----------
+    elapsed : datetime.timedelta
+        Duration to convert.
+
+    Returns
+    -------
+    Elapsed
+        A named tuple with fields: days, hours, mins, secs, ms.
+    """
+    Elapsed = namedtuple('Elapsed', ['days', 'hours', 'mins', 'secs', 'ms'])
+    total_secs = int(elapsed.total_seconds())
+    days, rem = divmod(total_secs, 86400)
+    hours, rem = divmod(rem, 3600)
+    mins, secs = divmod(rem, 60)
+    ms = elapsed.microseconds  # keep as microseconds for now
+    return Elapsed(days, hours, mins, secs, ms)
+
+
+def fmt_elapsed(elapsed: dt.timedelta) -> str:
+    """
+    Format a timedelta as a human-readable string.
+
+    Parameters
+    ----------
+    elapsed : datetime.timedelta
+        Duration to format.
+
+    Returns
+    -------
+    str
+        A string like "2 hours, 3 mins, 45.123456 secs".
+    """
+    ntup = tdelta_to_ntup(elapsed)
+    parts = []
+
+    for unit in ['days', 'hours', 'mins']:
+        val = getattr(ntup, unit)
+        if parts or val > 0:
+            parts.append(f"{val} {unit}")
+
+    # Format seconds (include microseconds as fraction)
+    secs_total = ntup.secs + ntup.ms / 1_000_000
+    secs_str = f"{secs_total:.6f}" if secs_total < 60 else f"{secs_total:.2f}"
+    parts.append(f"{secs_str} secs")
+
+    return ', '.join(parts)
+
+def fmt_now() -> str:
+    """
+    String representation of current time
+    """
+    return dt.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 
 
