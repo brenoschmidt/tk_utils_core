@@ -22,7 +22,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = [
+    "packaging",
+    "yfinance",
     "pandas",
+    "numpy",
     "requests",
     "ruamel.yaml",
     "pydantic>=2,<3",
