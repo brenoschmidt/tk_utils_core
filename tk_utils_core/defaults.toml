@@ -2,6 +2,15 @@
 #   Configuration file for the tk_utils_core module 
 # ----------------------------------------------------------------------------
 debug = false
+dependencies = [
+    "python>=3.12",
+    "yfinance",
+    "pandas",
+    "numpy",
+    "requests",
+    "ruamel.yaml",
+    "pydantic>=2,<3",
+]
 
 [pretty_errors]
 pretty_errors = true
@@ -28,16 +37,18 @@ compact=false
 
 [pycharm]
 validate_paths=true
-[pycharm.dirnames]
-backup="_backup"
-dropbox="_dropbox"
-venv=".venv"
-tk_utils="tk_utils"
-prj_root="toolkit"
-[pycharm.filenames]
-toolkit_config="toolkit_config.py"
-[pycharm.tk_utils]
-config="config.toml"
+prjname="toolkit"
+# All paths are relative to the PyCharm project folder
+[pycharm.paths]
+root="."
+backup="./_backup"
+dropbox="./_dropbox"
+venv="./.venv"
+idea="./.idea"
+tk_utils="./tk_utils"
+toolkit_config="./toolkit_config.py"
+tk_utils_config="./tk_utils/config.toml"
+dropbox_zip="./_dropbox/tookit.zip"
 
 [github]
 [github.tk_utils]
@@ -54,3 +65,4 @@ repo="tk_utils_core"
 
 [dropbox]
 url=""
+

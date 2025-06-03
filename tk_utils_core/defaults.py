@@ -81,33 +81,27 @@ class Github(BaseConfig):
     tk_utils: TkUtilsGithub 
     tk_utils_core: TkUtilsCoreGithub
     
-class TkUtils(BaseConfig):
-    """
-    """
-    config: str
 
-class PyCharmDirnames(BaseConfig):
+class PyCharmPaths(BaseConfig):
     """
     """
+    root: str
     backup: str
     dropbox: str
     venv: str
+    idea: str
     tk_utils: str
-    prj_root: str
-
-class PyCharmFilenames(BaseConfig):
-    """
-    """
     toolkit_config: str
+    tk_utils_config: str
+    dropbox_zip: str
+
 
 class PyCharm(BaseConfig):
     """
     """
     validate_paths: bool
-    dirnames: PyCharmDirnames
-    filenames: PyCharmFilenames
-    tk_utils: TkUtils
-
+    prjname: str
+    paths: PyCharmPaths
 
 class Defaults(BaseConfig):
     """
@@ -119,6 +113,7 @@ class Defaults(BaseConfig):
     github: Github
     dropbox: Dropbox
     pp: PP
+    dependencies: list[str]
 
 
 def _mk_defaults() -> Defaults:
