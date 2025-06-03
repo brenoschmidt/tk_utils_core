@@ -39,7 +39,6 @@ class BaseTestCase(unittest.TestCase):
 
     >>> base.run_tests(cls=MyTest, tests=['test_something'])
     """
-    _DEBUG = False
 
     def shortDescription(self) -> str:
         doc = self._testMethodDoc
@@ -60,7 +59,8 @@ class BaseTestCase(unittest.TestCase):
             as_hdr: bool = True,
             **kargs):
         """Start a formatted message block."""
-        if self._DEBUG:
+
+        if defaults.debug:
             print('\n' + fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
 
     def _add_msg(
@@ -70,7 +70,7 @@ class BaseTestCase(unittest.TestCase):
             color: str = 'yellow',
             **kargs):
         """Add a message line to the current debug block."""
-        if self._DEBUG:
+        if defaults.debug:
             print(fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
 
 
@@ -81,7 +81,7 @@ class BaseTestCase(unittest.TestCase):
             as_hdr: bool = True,
             **kargs):
         """End a message block with optional message."""
-        if self._DEBUG:
+        if defaults.debug:
             out = fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs)
             if not out.endswith('\n'):
                 out += '\n'
@@ -116,7 +116,7 @@ class BaseTestCase(unittest.TestCase):
         width : int, optional
             Line width for pretty-printing.
         """
-        if self._DEBUG is False:
+        if defaults.debug is False:
             return
         color = defaults.pp.color if color is None else color
         indent = defaults.pp.indent if indent is None else indent
