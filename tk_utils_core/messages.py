@@ -17,7 +17,10 @@ from .core.messages.formatters import (
         fmt_type,
         fmt_name,
         join_names,
+        fmt_now,
         fmt_str,
+        tdelta_to_ntup,
+        fmt_elapsed,
         fmt_value,
         )
 from .core.messages import (
@@ -33,6 +36,7 @@ __all__ = [
         'dirtree',
         'fmt_name',
         'fmt_str',
+        'fmt_now',
         'fmt_type',
         'fmt_valid_types',
         'fmt_valid_values',
@@ -43,6 +47,9 @@ __all__ = [
         'justify_values',
         'type_err_msg',
         'value_err_msg',
+        'ask_yes',
+        'fmt_elapsed',
+        'tdelta_to_ntup',
         ]
 
 
@@ -139,4 +146,68 @@ def fmt_msg(
     return '\n'.join(lines)
 
 
+def ask_yes(
+        msg: str | None = None,
+        color: str = None,
+        strict: bool = True,
+        default_yes: bool = False,
+        prompt: str | None = None) -> bool:
+    """
+    Ask for user confirmation and return True if confirmed.
+
+    Supports optional strictness and ENTER-to-continue mode.
+
+    Parameters
+    ----------
+    msg : str, optional
+        Message to display before the prompt. A newline will separate it
+        from the prompt if both are given.
+
+    color : str, optional
+        If provided, the full message (msg + prompt) will be colorized.
+
+    strict : bool, default True
+        If True, only accept "YES"/"NO". If False, also accept "y"/"n".
+
+    default_yes : bool, default False
+        If True, pressing ENTER counts as confirmation.
+
+    prompt : str, optional
+        Prompt string shown to the user. Defaults depend on `default_yes`.
+
+    Returns
+    -------
+    bool
+        True if user confirmed, False otherwise.
+    """
+    if default_yes:
+        prompt = prompt or "Press [ENTER] to continue, or type NO to exit: "
+        retry_hint = "You must either press [ENTER] or type YES/NO"
+    else:
+        prompt = prompt or "Please type YES to continue or NO to exit: "
+        retry_hint = "You must type YES or NO"
+
+    full_msg = f"{msg}\n{prompt}" if msg else prompt
+    if color is not None:
+        full_msg = colorize(full_msg, color=color)
+
+    answer = input(full_msg)
+    chk_answer = answer.casefold().strip().replace('"', '').replace("'", '')
+    retry_prompt = f"{retry_hint}, not '{answer}'. Try again:"
+
+    yes = {'yes', 'y'} if not strict else {'yes'}
+    no = {'no', 'n'} if not strict else {'no'}
+
+    if chk_answer in yes:
+        return True
+    elif chk_answer in no:
+        return False
+    elif chk_answer == "":
+        return default_yes if default_yes else ask_yes(
+            msg=None, prompt=retry_prompt,
+            color=color, strict=strict, default_yes=default_yes)
+    else:
+        return ask_yes(
+            msg=None, prompt=retry_prompt,
+            color=color, strict=strict, default_yes=default_yes)
 
