@@ -409,6 +409,11 @@ class SysUtils:
                 "Replace <URL_TO_SHARED_FOLDER> with the shared Dropbox link provided in ED.",
                 "It should start with:",
                 "  https://www.dropbox.com/...",
+                '',
+                " IMPORTANT: You need to import tk_utils gain",
+                " 1. Start a NEW interactive session",
+                " 2. Type `import tk_utils`",
+                " 3. Type `tk_utils.sync_dbox()`",
             ]))
 
         elif url is None:
@@ -722,7 +727,7 @@ def create_venv(
         err_msg=f"Failed to create virtual environment at {env_dir}"
     )
 
-    print(f"[done] Virtual environment created: {env_dir}")
+    print(f"Virtual environment created: {env_dir}")
     return True
 
 
