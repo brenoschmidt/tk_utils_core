@@ -155,7 +155,10 @@ class TKPaths:
         venv_bin = venv_root.joinpath('bin' if POSIX else 'Scripts')
 
         # possible executable names (in order or priority)
-        _pips = ['pip', 'pip3', 'pip.exe', 'pip3.exe']
+        if POSIX:
+            _pips = ['pip', 'pip3']
+        else:
+            _pips = ['pip.exe', 'pip3.exe', 'pip', 'pip3']
         pips = [venv_bin.joinpath(x) for x in _pips]
         venv = {
                 'root': venv_root,
