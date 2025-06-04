@@ -29,16 +29,15 @@ from .core.messages.logtools import (
         LogFunc,
         logfunc,
         )
-from .core.messages import (
-        colorize,
-        dirtree,
-        )
+from .core.messages.colorize import colorize, decolorize
+from .core.messages.dirtree import dirtree
 from .options import options
 
 __all__ = [
         'align',
         'align_by_char',
         'colorize',
+        'decolorize',
         'dirtree',
         'fmt_name',
         'fmt_str',
