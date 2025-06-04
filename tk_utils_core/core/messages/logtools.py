@@ -15,7 +15,7 @@ import datetime as dt
 import dataclasses as dc
 from typing import Callable
 
-from ._colorize import colorize, decolorize
+from .colorize import colorize, decolorize
 from ..structs import BaseParms
 
 __all__ = [

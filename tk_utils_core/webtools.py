@@ -5,11 +5,11 @@ Web utils
 """
 from __future__ import annotations
 
-from .core.webtools.downloaders import (
+from tk_utils_core.core.webtools.downloaders import (
         download,
         download_to_tmp,
         )
-from .core.webtools.github import (
+from tk_utils_core.core.webtools.github import (
         git_url,
         cnts_url,
         )
