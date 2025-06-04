@@ -1,5 +1,5 @@
 """ 
-Defaults
+Options
          
 """
 from __future__ import annotations
@@ -103,7 +103,7 @@ class PyCharm(BaseConfig):
     prjname: str
     paths: PyCharmPaths
 
-class Defaults(BaseConfig):
+class Options(BaseConfig):
     """
     """
     debug: bool = False
@@ -116,14 +116,14 @@ class Defaults(BaseConfig):
     dependencies: list[str]
 
 
-def _mk_defaults() -> Defaults:
+def _mk_defaults() -> Options:
     pth = pathlib.Path(__file__).with_name("defaults.toml")
     dflts = load_toml_defaults(pth)
-    return Defaults.model_validate(dflts)
+    return Options.model_validate(dflts)
 
-defaults = _mk_defaults()
+options = _mk_defaults()
 
 def configure(updates: dict):
-    global defaults
-    defaults._update(updates, copy=False)
+    global options 
+    options._update(updates, copy=False)
 
