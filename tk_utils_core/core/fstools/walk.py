@@ -160,8 +160,8 @@ def _os_walk(root: pathlib.Path, parms: WalkParms):
 
 
 def _walk_with_incl_dirs(
-    parms: WalkParms, pats: Patterns
-) -> Iterator[str | pathlib.Path]:
+        parms: WalkParms, pats: Patterns
+        ) -> Iterator[str | pathlib.Path]:
     """
     Walk subtrees starting from directories whose names match incl_dirs.
     Applies _walk_pruned to filter content within matched subtrees.
@@ -179,8 +179,7 @@ def _walk_with_incl_dirs(
 
 def _walk_all_dirs(
     parms: WalkParms, 
-    pats: Patterns
-) -> Iterator[str | pathlib.Path]:
+    pats: Patterns) -> Iterator[str | pathlib.Path]:
     """
     Walk the entire directory tree starting from root, filtering according
     to excl_dirs, incl_files, excl_files, and hidden file settings.
@@ -220,8 +219,7 @@ def _get_parents(
 def _walk_pruned(
     parms: WalkParms,
     pats: Patterns,
-    root: pathlib.Path
-) -> Iterator[str | pathlib.Path]:
+    root: pathlib.Path) -> Iterator[str | pathlib.Path]:
     """
     Walk a subtree rooted at the given path, applying:
       - Directory pruning via excl_dirs and hidden file exclusion

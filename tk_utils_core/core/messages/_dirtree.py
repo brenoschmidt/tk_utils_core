@@ -37,11 +37,11 @@ class Branch:
     """
 
     def __init__(
-        self,
-        root: pathlib.Path,
-        pth: pathlib.Path,
-        note: str | None = None,
-        ):
+            self,
+            root: pathlib.Path,
+            pth: pathlib.Path,
+            note: str | None = None,
+            ) -> None:
         self.root = root
         self.pth = pth
         self.rpth = pth.relative_to(root)
