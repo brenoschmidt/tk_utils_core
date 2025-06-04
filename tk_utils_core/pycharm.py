@@ -170,7 +170,7 @@ class TKPaths:
         Returns an existing pip executable (None if 
         no executable can be found
         """
-        for p in self.venv.pips:
+        for p in self.paths.venv.pips:
             if p.exists() and p.is_file():
                 return p
 
@@ -277,7 +277,7 @@ class TKPaths:
         env_dir = self.paths.venv.root
         renv_dir = self.paths.venv.root.relative_to(self.paths.root)
         is_active = sys.prefix == str(env_dir.resolve())
-        pipexec = self.paths.get_pip()
+        pipexec = self.get_pip()
 
         if not env_dir.exists():
             raise FileNotFoundError(
