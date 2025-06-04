@@ -23,6 +23,12 @@ from .core.messages.formatters import (
         fmt_elapsed,
         fmt_value,
         )
+from .core.messages.logtools import (
+        Tee,
+        LogParms,
+        LogFunc,
+        logfunc,
+        )
 from .core.messages import (
         colorize,
         dirtree,
@@ -50,6 +56,10 @@ __all__ = [
         'ask_yes',
         'fmt_elapsed',
         'tdelta_to_ntup',
+        'Tee',
+        'LogParms',
+        'LogFunc',
+        'logfunc',
         ]
 
 
