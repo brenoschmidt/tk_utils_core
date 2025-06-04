@@ -4,7 +4,7 @@ System utils
 """
 from __future__ import annotations
 
-from tk_utils_core.core.system.pkgtools import (
+from tk_utils_core.core.system.modtools import (
         validate_dependencies,
         )
 from tk_utils_core.core.system.runners import (
