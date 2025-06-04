@@ -9,17 +9,17 @@ from .core._typing import (
         UNSET,
         )
 
-from .defaults import defaults
+from .options import options
 
 pretty_errors = UNSET
-if defaults.pretty_errors.pretty_errors is True:
+if options.pretty_errors.pretty_errors is True:
     try:
         import pretty_errors
         pretty_errors.configure(
             separator_character = '*',
             filename_display = pretty_errors.FILENAME_EXTENDED,
-            line_number_first = defaults.pretty_errors.line_number_first,
-            display_link = defaults.pretty_errors.display_link,
+            line_number_first = options.pretty_errors.line_number_first,
+            display_link = options.pretty_errors.display_link,
             #lines_before = 5,
             #lines_after = 2,
             #line_color = pretty_errors.RED + '> ' + pretty_errors.default_config.line_color,

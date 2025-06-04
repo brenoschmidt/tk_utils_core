@@ -33,7 +33,7 @@ from .core.messages import (
         colorize,
         dirtree,
         )
-from .defaults import defaults
+from .options import options
 
 __all__ = [
         'align',
@@ -91,9 +91,9 @@ def fmt_msg(
         If True, adds a separator line before and after the message.
     indent : str, default ''
         Optional indentation applied to each line.
-    min_sep_width : int or None, default: `defaults.pp.width`
+    min_sep_width : int or None, default: `options.pp.width`
         Minimum width for the header separator line.
-    max_sep_width : int or None, default: `defaults.pp.width`
+    max_sep_width : int or None, default: `options.pp.width`
         Maximum width for the header separator line.
     sep : str, default '-'
         Character used to build the header separator.
@@ -132,8 +132,8 @@ def fmt_msg(
     if not lines:
         lines = ['']
 
-    min_sep_width = defaults.pp.width if min_sep_width is None else min_sep_width
-    max_sep_width = defaults.pp.width if max_sep_width is None else max_sep_width
+    min_sep_width = options.pp.width if min_sep_width is None else min_sep_width
+    max_sep_width = options.pp.width if max_sep_width is None else max_sep_width
 
     sep_width = min(
         max_sep_width,

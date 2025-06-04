@@ -3,7 +3,7 @@ from . import (
         converters,
         core,
         decorators,
-        defaults,
+        options,
         fstools,
         mappings,
         messages,
