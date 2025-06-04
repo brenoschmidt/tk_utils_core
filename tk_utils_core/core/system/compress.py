@@ -1,5 +1,5 @@
 """ 
-File system utils
+Compression tools
 
          
 """
@@ -7,32 +7,11 @@ from __future__ import annotations
 
 import os
 import pathlib
-import shutil
 import zipfile
 
-from .core.fstools.safeio import (
-        copy_with_parents,
-        safe_copy,
-        safe_copytree,
-        )
-from .core.fstools.walk import walk 
-from .core.fstools._fstools import (
-        add_parents,
-        add_parents_to_paths,
-        )
-
-
 __all__ = [
-        'copy_with_parents',
-        'safe_copy',
-        'safe_copytree',
-        'walk',
         'unzip',
-        'add_parents',
-        'add_parents_to_paths',
         ]
-
-
 
 class _ZipFile(zipfile.ZipFile):
     """ 
@@ -73,5 +52,4 @@ def unzip(src: str | pathlib.Path, dst: str | pathlib.Path):
     except ValueError:
         with _ZipFile(src) as zf:
             zf.extractall(dst)
-
 

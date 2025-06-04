@@ -1,5 +1,5 @@
 """ 
-System utils
+General system utilities
 
          
 """
@@ -72,8 +72,6 @@ def validate_dependencies(requirements: list[str]):
         raise ImportError(f"Missing required packages: {', '.join(missing)}")
 
 
-
-
 def run(
         cmds: Sequence[str],
         err_msg: str = '',
@@ -119,7 +117,6 @@ def run(
 
     if not quiet and r.stdout:
         print(r.stdout, end='')
-
 
 
 def shell_exec(
