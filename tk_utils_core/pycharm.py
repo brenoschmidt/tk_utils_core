@@ -23,11 +23,11 @@ from tk_utils_core.messages import (
         fmt_msg,
         )
 from tk_utils_core.webtools import (
+        github,
         download,
         download_to_tmp,
-        _github as github,
         )
-from tk_utils_core.fstools import (
+from tk_utils_core.system import (
         safe_copytree,
         safe_copy,
         walk,
@@ -47,7 +47,7 @@ from tk_utils_core.structs import (
         obj_dot_get,
         )
 from tk_utils_core.system import run
-from tk_utils_core import fstools
+
 
 def has_idea_folder(pth: pathlib.Path) -> bool:
     """
