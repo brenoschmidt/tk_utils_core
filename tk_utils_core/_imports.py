@@ -5,11 +5,11 @@ API
 """
 from __future__ import annotations
 
-from .core._typing import (
+from tk_utils_core.core._typing import (
         UNSET,
         )
 
-from .options import options
+from tk_utils_core.options import options
 
 pretty_errors = UNSET
 if options.pretty_errors.pretty_errors is True:
