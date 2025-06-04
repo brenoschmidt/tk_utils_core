@@ -270,19 +270,18 @@ def _walk(parms: WalkParms) -> Iterator[str | pathlib.Path]:
     return _walk_all_dirs(parms, pats)
 
 def walk(
-    root: str | pathlib.Path,
-    parents: bool = False,
-    incl_dirs: str | Iterable[str] | None = None,
-    incl_files: str | Iterable[str] | None = None,
-    excl_dirs: str | Iterable[str] | None = None,
-    excl_files: str | Iterable[str] | None = None,
-    follow_symlinks: bool = False,
-    ignore_case: bool = DFLT_IGNORE_CASE,
-    sort: bool = False,
-    exclude_hidden: bool = False,
-    dirs_first: bool = True,
-    as_path: bool = True
-) -> list[str | pathlib.Path]:
+        root: str | pathlib.Path,
+        parents: bool = False,
+        incl_dirs: str | Iterable[str] | None = None,
+        incl_files: str | Iterable[str] | None = None,
+        excl_dirs: str | Iterable[str] | None = None,
+        excl_files: str | Iterable[str] | None = None,
+        follow_symlinks: bool = False,
+        ignore_case: bool = DFLT_IGNORE_CASE,
+        sort: bool = False,
+        exclude_hidden: bool = False,
+        dirs_first: bool = True,
+        as_path: bool = True) -> list[str | pathlib.Path]:
     """
     Return a list with filtered files/folders in a directory tree.
 

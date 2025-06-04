@@ -298,7 +298,7 @@ class TKPaths:
         is_dir = path.is_dir()
 
         if not path.parent.exists() or not has_idea_folder(path.parent):
-            raise Exception("Cannot create folder '{path}': Not inside a "
+            raise Exception(f"Cannot create folder '{path}': Not inside a "
                             "PyCharm project")
         elif not path.exists():
             print(f"Folder '{path.name}' does not exist, creating...")
