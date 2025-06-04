@@ -216,7 +216,7 @@ def run_tests(
             msg += ["No tests found in _only_in_debug."]
         else:
             msg += ["Running only tests listed in: _only_in_debug"]
-            msg += [f"  • {name}" for name in tests]
+            msg += [f"  - {name}" for name in tests]
 
         msg += ["=" * 40]
         print(fmt_msg(msg, as_hdr=True, color='yellow'))
