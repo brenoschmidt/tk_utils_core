@@ -15,7 +15,7 @@ import sys
 
 import requests
 
-from tk_utils_core.defaults import defaults
+from tk_utils_core.options import options
 from tk_utils_core.messages import (
         dirtree,
         ask_yes,
@@ -92,11 +92,11 @@ class TKPaths:
         """
         """
         self._root = as_path(prjroot)
-        self.prjname = defaults.pycharm.prjname
+        self.prjname = options.pycharm.prjname
         self._tk_utils_init = tk_utils_init
 
         if validate is None:
-            self.validate = defaults.pycharm.validate_paths
+            self.validate = options.pycharm.validate_paths
         elif isinstance(validate, bool):
             self.validate = validate
         else:
@@ -122,7 +122,7 @@ class TKPaths:
         """
         PyCharm's project folder
         """
-        return self._root.joinpath(defaults.pycharm.paths.root)
+        return self._root.joinpath(options.pycharm.paths.root)
 
     @cached_property
     def tk_utils_init(self):
@@ -132,13 +132,13 @@ class TKPaths:
         if self._tk_utils_init is not None:
             return as_path(self._tk_utils_init)
         else:
-            return self.root.joinpath(defaults.pycharm.paths.tk_utils,
+            return self.root.joinpath(options.pycharm.paths.tk_utils,
                                       '__init__.py')
 
     def mk_paths(self, root):
         """
         """
-        _paths = defaults.pycharm.paths
+        _paths = options.pycharm.paths
         attrs = [
                 'backup',
                 'dropbox',
@@ -208,7 +208,7 @@ class TKPaths:
                 dirs=dirs,
                 paths=paths, 
                 notes=notes, 
-                note_align_width=defaults.pp.width)
+                note_align_width=options.pp.width)
 
     def _mk_tk_utils_tree_err(self, err_msg, notes):
         """
@@ -387,7 +387,7 @@ class SysUtils:
         Download the most recent files from the shared Dropbox folder.
 
         If `url` is not provided, the function uses the default from the config
-        (defaults.dropbox.url). The downloaded file is saved to the Dropbox ZIP
+        (options.dropbox.url). The downloaded file is saved to the Dropbox ZIP
         location. If the file already exists, it is first downloaded to a temporary
         file to avoid overwriting valid content on failure.
 
@@ -408,7 +408,7 @@ class SysUtils:
             If the Dropbox URL is missing or improperly configured.
         """
         _paths = self.tkpaths.paths
-        if url is None and defaults.dropbox.url is None:
+        if url is None and options.dropbox.url is None:
 
             cfg = _paths.tk_utils_config.relative_to(_paths.root)
             raise ValueError("\n".join([
@@ -434,7 +434,7 @@ class SysUtils:
             ]))
 
         elif url is None:
-            url = defaults.dropbox.url
+            url = options.dropbox.url
 
         self.tkpaths.validate_dropbox()
         dst = _paths.dropbox_zip
@@ -499,7 +499,7 @@ class SysUtils:
                 paths=all_paths,
                 dirs=None,
                 notes=notes,
-                note_align_width=defaults.pp.width,
+                note_align_width=options.pp.width,
             )
 
             msg = [
@@ -641,13 +641,13 @@ class SysUtils:
         """
         _paths = self.tkpaths.paths
         tk_utils_base = github.cnts_url(
-                    user=defaults.github.tk_utils.user, 
-                    repo=defaults.github.tk_utils.repo, 
-                    branch=defaults.github.tk_utils.base, 
+                    user=options.github.tk_utils.user, 
+                    repo=options.github.tk_utils.repo, 
+                    branch=options.github.tk_utils.base, 
                     )
         tk_utils_files = {
                 x: f"{tk_utils_base}/{x}" 
-                for x in defaults.github.tk_utils.modules}
+                for x in options.github.tk_utils.modules}
 
         for name, url in tk_utils_files.items():
             dst = _paths.tk_utils.joinpath(name)
@@ -667,8 +667,8 @@ class SysUtils:
         self.tkpaths.validate_venv()
         pipexec = self.tkpaths.get_pip()
         tgt = github.git_url(
-                    user=defaults.github.tk_utils_core.user, 
-                    repo=defaults.github.tk_utils_core.repo, 
+                    user=options.github.tk_utils_core.user, 
+                    repo=options.github.tk_utils_core.repo, 
                     )
         cmd = [
                 str(pipexec), 

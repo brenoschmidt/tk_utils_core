@@ -28,5 +28,5 @@ from tk_utils_core.core.structs import (
         obj_dot_delete,
         )
 
-from tk_utils_core.defaults import defaults
+from tk_utils_core.options import options
 

@@ -14,7 +14,7 @@ from tk_utils_core.core.mappings import (
         deep_update,
         )
 
-from tk_utils_core.defaults import defaults
+from tk_utils_core.options import options
 
 
 class AttrDict(dict):
@@ -49,13 +49,13 @@ class AttrDict(dict):
             return output
 
     def __str__(self):
-        if defaults.pp.pretty is True:
+        if options.pp.pretty is True:
             return pp.pformat(self,
-                              width=defaults.pp.width,
-                              sort_dicts=defaults.pp.sort_dicts,
-                              underscore_numbers=defaults.pp.underscore_numbers,
-                              depth=defaults.pp.depth,
-                              compact=defaults.pp.compact,
+                              width=options.pp.width,
+                              sort_dicts=options.pp.sort_dicts,
+                              underscore_numbers=options.pp.underscore_numbers,
+                              depth=options.pp.depth,
+                              compact=options.pp.compact,
                               )
         else:
             return dict.__str__(self)
