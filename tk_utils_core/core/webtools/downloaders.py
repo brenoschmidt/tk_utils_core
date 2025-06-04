@@ -9,7 +9,7 @@ import pathlib
 import requests
 import tempfile
 
-from ..core.converters import as_path
+from ..converters import as_path
 
 
 def download_to_tmp(url: str) -> pathlib.Path:

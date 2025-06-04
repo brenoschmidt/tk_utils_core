@@ -12,14 +12,14 @@ from typing import Callable
 from functools import lru_cache
 from types import SimpleNamespace
 
-from ..defaults import defaults
+from ..options import options
 
 
 @lru_cache(1)
 def _mk_dflt_opts():
     """
     Return a dictionary of default doctest options sourced from
-    defaults.doctests.
+    options.doctests.
 
     The returned dictionary includes:
     - compileflags
@@ -43,7 +43,7 @@ def _mk_dflt_opts():
         'name': 'NoName',
         'optionflags': doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE,
     }
-    out.update((x, getattr(defaults.doctests, x)) for x in attrs)
+    out.update((x, getattr(options.doctests, x)) for x in attrs)
     return out
 
 

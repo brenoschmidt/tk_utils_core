@@ -14,7 +14,7 @@ from typing import Iterable
 from functools import lru_cache
 
 from ..messages import colorize, fmt_msg
-from ..defaults import defaults
+from ..options import options
 
 __all__ = ["BaseTestCase", "run_tests", "main"]
 
@@ -142,11 +142,11 @@ class BaseTestCase(unittest.TestCase):
         """
         if not self.__debug_enabled__:
             return
-        color = defaults.pp.color if color is None else color
-        indent = defaults.pp.indent if indent is None else indent
+        color = options.pp.color if color is None else color
+        indent = options.pp.indent if indent is None else indent
 
         if pretty:
-            width = defaults.pp.width if width is None else width
+            width = options.pp.width if width is None else width
             msg = pp.pformat(msg, width=width)
         else:
             msg = str(msg)
@@ -180,7 +180,7 @@ def run_tests(
     To run only selected tests in debug mode:
 
     >>> from tk_utils_core.testing.unittest_utils import BaseTestCase, run_tests
-    >>> from tk_utils_core.defaults import defaults
+    >>> from tk_utils_core.options import options
     >>>
     >>> class TestSomething(BaseTestCase):
     ...     _only_in_debug = ['test_one_thing']
@@ -194,7 +194,7 @@ def run_tests(
     ...         pass
     >>>
     >>> def main():
-    ...     run_tests(TestSomething, debug=defaults.debug)
+    ...     run_tests(TestSomething, debug=options.debug)
     """
     suite = unittest.TestSuite()
 
