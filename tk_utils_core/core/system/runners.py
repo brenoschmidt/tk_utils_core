@@ -16,7 +16,7 @@ def run(
         cmds: Sequence[str],
         err_msg: str = '',
         echo: bool = False,
-        quiet: bool = False) -> None:
+        quiet: bool = False) -> subprocess.CompletedProcess:
     """
     Run a subprocess command safely (shell=False).
 
