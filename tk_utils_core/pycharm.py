@@ -153,14 +153,30 @@ class TKPaths:
                 for p in attrs}
         venv_root = root.joinpath(_paths.venv)
         venv_bin = venv_root.joinpath('bin' if POSIX else 'Scripts')
+
+        # possible executable names (in order or priority)
+        if POSIX:
+            _pips = ['pip', 'pip3']
+        else:
+            _pips = ['pip.exe', 'pip3.exe', 'pip', 'pip3']
+        pips = [venv_bin.joinpath(x) for x in _pips]
         venv = {
                 'root': venv_root,
                 'bin': venv_bin,
-                'pip': venv_bin.joinpath('pip'),
-                'pyexec': venv_bin.joinpath('python' if POSIX else 'python.exe'),
+                'pips': pips,
                 }
         kargs['venv'] = venv
         return to_namespace(kargs)
+
+    def get_pip(self) -> pathlib.Path | None:
+        """
+        Returns an existing pip executable (None if 
+        no executable can be found
+        """
+        for p in self.paths.venv.pips:
+            if p.exists() and p.is_file():
+                return p
+
 
     @cached_property
     def paths(self) -> SimpleNamespace:
@@ -264,16 +280,17 @@ class TKPaths:
         env_dir = self.paths.venv.root
         renv_dir = self.paths.venv.root.relative_to(self.paths.root)
         is_active = sys.prefix == str(env_dir.resolve())
+        pipexec = self.get_pip()
 
         if not env_dir.exists():
             raise FileNotFoundError(
                 f"Directory '{renv_dir}' does not exist. "
                 f"Please run the tk_utils/setup.py script."
             )
-        elif sys.prefix == str(env_dir.resolve()) and self.paths.venv.pip.exists():
+        elif sys.prefix == str(env_dir.resolve()) and pipexec.exists():
             self.validate_tracker.venv_validated = True
             return 
-        elif not self.paths.venv.pip.exists():
+        elif not pipexec.exists():
             raise FileNotFoundError(
                 f"Could not find pip executable inside '{renv_dir}'. "
                 f"Please run the tk_utils/setup.py script."
@@ -648,13 +665,19 @@ class SysUtils:
         """
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
-        _paths = self.tkpaths.paths
+        pipexec = self.tkpaths.get_pip()
         tgt = github.git_url(
                     user=defaults.github.tk_utils_core.user, 
                     repo=defaults.github.tk_utils_core.repo, 
                     )
-        opts = "--force-reinstall" 
-        run(f"{_paths.venv.pip} install {opts} git+{tgt}")
+        cmd = [
+                str(pipexec), 
+                "install", 
+                "--force-reinstall",
+                f"git+{tgt}",
+                ]
+        run(cmd)
+
 
     def update_tk_utils(self):
         """
