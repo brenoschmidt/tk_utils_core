@@ -2,13 +2,6 @@
 Unittest wrappers
 
 
-TODO:
-
-1. Change the modules 
-
-'testing/_unittests.py -> testing/unittest_runner.py'
-and
-'testing/_doctests.py -> testing/doctest_runner.py'
 
 """
 from __future__ import annotations
