@@ -1,5 +1,15 @@
 """
 Unittest wrappers
+
+
+TODO:
+
+1. Change the modules 
+
+'testing/_unittests.py -> testing/unittest_runner.py'
+and
+'testing/_doctests.py -> testing/doctest_runner.py'
+
 """
 from __future__ import annotations
 
@@ -12,6 +22,8 @@ from functools import lru_cache
 
 from ..messages import colorize, fmt_msg
 from ..defaults import defaults
+
+__all__ = ["BaseTestCase", "run_tests", "main"]
 
 
 @lru_cache(1)
@@ -26,19 +38,34 @@ def get_logger() -> logging.Logger:
 
 class BaseTestCase(unittest.TestCase):
     """
-    Simple extension of unittest.TestCase with colored message support.
+    Extension of `unittest.TestCase` with support for colorized debug output
+    during development-mode test execution.
 
-    Usage
-    -----
-    >>> class MyTest(BaseTestCase):
-    ...
-    ...     def test_something(self):
-    ...         self._start_msg("Start test")
-    ...         self._add_msg("Running step...")
-    ...         self._end_msg()
+    Attributes
+    ----------
+    __debug_enabled__ : bool
+        If True, enables additional debug output through helper methods.
 
-    >>> base.run_tests(cls=MyTest, tests=['test_something'])
+    _only_in_debug : list of str
+        List of test method names to run only when debug is True.
+
+    Methods
+    -------
+    _start_msg(msg, color='green', as_hdr=True, **kargs)
+        Start a formatted message block.
+
+    _add_msg(msg, color='yellow', as_hdr=False, **kargs)
+        Append a line to the current debug message block.
+
+    _end_msg(msg=None, color='green', as_hdr=True, **kargs)
+        Conclude the debug message block.
+
+    _print_debug(obj, color=None, indent=None, as_hdr=None, 
+            pretty=False, width=None, ...)
+        Print structured debug output using pprint and ANSI color formatting.
     """
+    __debug_enabled__: bool = False
+    _only_in_debug = []
 
     def shortDescription(self) -> str:
         doc = self._testMethodDoc
@@ -58,9 +85,10 @@ class BaseTestCase(unittest.TestCase):
             color: str | None = 'green',
             as_hdr: bool = True,
             **kargs):
-        """Start a formatted message block."""
-
-        if defaults.debug:
+        """
+        Start a formatted message block.
+        """
+        if self.__debug_enabled__:
             print('\n' + fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
 
     def _add_msg(
@@ -69,10 +97,11 @@ class BaseTestCase(unittest.TestCase):
             as_hdr: bool = False,
             color: str = 'yellow',
             **kargs):
-        """Add a message line to the current debug block."""
-        if defaults.debug:
+        """
+        Add a message line to the current debug block.
+        """
+        if self.__debug_enabled__:
             print(fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
-
 
     def _end_msg(
             self,
@@ -80,8 +109,10 @@ class BaseTestCase(unittest.TestCase):
             color: str | None = 'green',
             as_hdr: bool = True,
             **kargs):
-        """End a message block with optional message."""
-        if defaults.debug:
+        """
+        End a message block with optional message.
+        """
+        if self.__debug_enabled__:
             out = fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs)
             if not out.endswith('\n'):
                 out += '\n'
@@ -116,7 +147,7 @@ class BaseTestCase(unittest.TestCase):
         width : int, optional
             Line width for pretty-printing.
         """
-        if defaults.debug is False:
+        if not self.__debug_enabled__:
             return
         color = defaults.pp.color if color is None else color
         indent = defaults.pp.indent if indent is None else indent
@@ -133,9 +164,8 @@ class BaseTestCase(unittest.TestCase):
 
 def run_tests(
         cls: type[BaseTestCase],
-        tests: list[str],
-        verbosity: int = 2,
         debug: bool = False,
+        verbosity: int = 2,
         *args,
         **kargs,
         ) -> None:
@@ -146,21 +176,72 @@ def run_tests(
     ----------
     cls : BaseTestCase
         The test case class.
-    tests : list of str
-        Method names to run.
+    debug : bool, default False
+        If True, only methods in `cls._only_in_debug` are run and debug
+        output is enabled.
     verbosity : int
         Output verbosity level.
+
+    Examples
+    --------
+    To run only selected tests in debug mode:
+
+    >>> from tk_utils_core.testing.unittest_utils import BaseTestCase, run_tests
+    >>> from tk_utils_core.defaults import defaults
+    >>>
+    >>> class TestSomething(BaseTestCase):
+    ...     _only_in_debug = ['test_one_thing']
+    ...
+    ...     def test_one_thing(self):
+    ...         self._start_msg("Starting test")
+    ...         self._print_debug({'example': 123})
+    ...         self._end_msg()
+    ...
+    ...     def test_another(self):
+    ...         pass
+    >>>
+    >>> def main():
+    ...     run_tests(TestSomething, debug=defaults.debug)
     """
     suite = unittest.TestSuite()
-    for test in tests:
-        cls._DEBUG = debug
-        suite.addTest(cls(test))
+
+    if debug and hasattr(cls, '__debug_enabled__'):
+        cls.__debug_enabled__ = True
+        tests = getattr(cls, '_only_in_debug', None)
+    else:
+        tests = None
+
+    if tests is not None:
+        msg = [
+            "=" * 40,
+            "  DEBUG MODE ENABLED: SELECTIVE TESTS",
+            "-" * 40,
+            f"Class: {cls.__name__}",
+        ]
+
+        if not tests:
+            msg += ["No tests found in _only_in_debug."]
+        else:
+            msg += ["Running only tests listed in: _only_in_debug"]
+            msg += [f"  • {name}" for name in tests]
+
+        msg += ["=" * 40]
+        print(fmt_msg(msg, as_hdr=True, color='yellow'))
+
+        for test in tests:
+            suite.addTest(cls(test))
+    else:
+        suite = unittest.defaultTestLoader.loadTestsFromTestCase(cls)
+
     runner = unittest.TextTestRunner(verbosity=verbosity)
     runner.run(suite)
 
 
 def main(verbosity: int = 2, *args, **kargs):
-    """Run all tests using unittest.main()."""
+    """
+    Run all tests using unittest.main().
+    """
     unittest.main(verbosity=verbosity, *args, **kargs)
+
 
 
