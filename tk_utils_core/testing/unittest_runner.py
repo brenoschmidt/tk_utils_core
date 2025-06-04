@@ -204,7 +204,7 @@ def run_tests(
     else:
         tests = None
 
-    if tests is not None:
+    if tests is not None and len(tests) > 0:
         msg = [
             "=" * 40,
             "  DEBUG MODE ENABLED: SELECTIVE TESTS",
