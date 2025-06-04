@@ -58,6 +58,8 @@ def run(
     if not quiet and r.stdout:
         print(r.stdout, end='')
 
+    return r
+
 
 def shell_exec(
         cmd: str,
