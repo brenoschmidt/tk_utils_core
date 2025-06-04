@@ -7,9 +7,8 @@ from __future__ import annotations
 
 from collections import namedtuple
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Sequence
 import importlib
-import shlex
 import subprocess
 import sys
 
@@ -72,80 +71,123 @@ def validate_dependencies(requirements: list[str]):
     if missing:
         raise ImportError(f"Missing required packages: {', '.join(missing)}")
 
+
+
+
 def run(
-        cmd: list[str] | str,
-        shell: bool = True,
-        quiet: bool = False,
-        echo: bool = False,
-        bufsize: int = 0,
+        cmds: Sequence[str],
         err_msg: str = '',
-        **kargs: Any) -> namedtuple:
+        echo: bool = False,
+        quiet: bool = False) -> None:
     """
-    Run a shell or subprocess command and capture output.
+    Run a subprocess command safely (shell=False).
 
     Parameters
     ----------
-    cmd : list[str] | str
-        Command to run.
+    cmds : list[str]
+        Command and arguments to run (e.g. ['ls', '-l'])
 
-    shell : bool, default True
-        If True, run the command via the shell.
+    err_msg : str
+        Extra message to append if command fails.
+
+    echo : bool
+        If True, prints the command being run.
+
+    quiet : bool
+        If True, suppresses stdout on success.
+    """
+    if not isinstance(cmds, (list, tuple)):
+        raise TypeError(
+                f"`cmds` must be a list or tuple of strings, got: {type(cmds)}")
+
+    if echo:
+        print(f"Running: {' '.join(cmds)}")
+
+    r = subprocess.run(
+        cmds,
+        shell=False,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    if r.returncode != 0:
+        msg = r.stderr.strip()
+        if err_msg:
+            msg = f"{err_msg}\n{msg}"
+        raise RuntimeError(msg)
+
+    if not quiet and r.stdout:
+        print(r.stdout, end='')
+
+
+
+def shell_exec(
+        cmd: str,
+        quiet: bool = False,
+        echo: bool = False,
+        check: bool = True,
+        err_msg: str = '',
+        **kargs: Any) -> namedtuple:
+    """
+    Run a shell command (string) using shell=True.
+
+    Parameters
+    ----------
+    cmd : str
+        The command to execute (as a shell string).
 
     quiet : bool, default False
-        If True, do not print stdout.
+        Suppress printing of stdout.
 
     echo : bool, default False
-        If True, print the command being executed.
+        Print the command before executing.
 
-    bufsize : int, default 0
-        Buffer size passed to subprocess.Popen.
+    check : bool, default True
+        Raise RuntimeError on non-zero return code.
 
     err_msg : str, default ''
-        Extra message to include if the command fails.
+        Extra message included in the error if check fails.
 
     **kargs : Any
-        Passed to subprocess.Popen.
+        Extra arguments passed to subprocess.run
 
     Returns
     -------
     Result
-        Named tuple with fields: cmd, stdout, stderr, rc (return code).
+        Namedtuple(cmd, stdout, stderr, rc)
     """
     Result = namedtuple('Result', ['cmd', 'stdout', 'stderr', 'rc'])
-
-    cmd_list = cmd if isinstance(cmd, list) else shlex.split(cmd)
-    cmd_str = ' '.join(cmd_list) if shell else cmd_list
-
     if echo:
-        print(f"Running: {cmd_str}")
+        print(f"Running (shell): {cmd}")
 
-    proc = subprocess.Popen(
-        cmd_str,
-        shell=shell,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        bufsize=bufsize,
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        capture_output=True,
+        text=True,
+        check=False,
         **kargs,
     )
-    out, err = proc.communicate()
-    rc = proc.returncode
 
-    out_str = out.decode('utf-8') if out else ''
-    err_str = err.decode('utf-8') if err else ''
+    stdout = result.stdout or ''
+    stderr = result.stderr or ''
+    rc = result.returncode
 
-    if not quiet and out_str:
-        print(out_str)
+    if not quiet and stdout:
+        print(stdout, end='')
 
-    if rc != 0:
-        msg = f"Command failed [{rc}]: {cmd_str}"
+    if check and rc != 0:
+        msg = f"Shell command failed [{rc}]: {cmd}"
         if err_msg:
             msg += f"\n{err_msg}"
-        msg += f"\n{err_str.strip()}"
+        if stderr:
+            msg += f"\n{stderr.strip()}"
         raise RuntimeError(msg)
 
-    return Result(cmd=cmd_str, stdout=out_str.splitlines(),
-                  stderr=err_str.splitlines(), rc=rc)
-
+    return Result(cmd=cmd, 
+                  stdout=stdout.splitlines(), 
+                  stderr=stderr.splitlines(), rc=rc)
 
 
 
