@@ -1,10 +1,8 @@
 
 from . import (
         converters,
-        core,
         decorators,
         options,
-        fstools,
         mappings,
         messages,
         pycharm,

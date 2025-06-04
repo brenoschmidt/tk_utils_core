@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from typing import Iterable
 
-from .core.messages.errors import (
+from tk_utils_core.core.messages.errors import (
         type_err_msg,
         value_err_msg,
     )
-from .core.messages.formatters import (
+from tk_utils_core.core.messages.formatters import (
         align,
         justify_values,
         align_by_char,
@@ -23,15 +23,15 @@ from .core.messages.formatters import (
         fmt_elapsed,
         fmt_value,
         )
-from .core.messages.logtools import (
+from tk_utils_core.core.messages.logtools import (
         Tee,
         LogParms,
         LogFunc,
         logfunc,
         )
-from .core.messages.colorize import colorize, decolorize
-from .core.messages.dirtree import dirtree
-from .options import options
+from tk_utils_core.core.messages.colorize import colorize, decolorize
+from tk_utils_core.core.messages.dirtree import dirtree
+from tk_utils_core.options import options
 
 __all__ = [
         'align',

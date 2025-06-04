@@ -9,15 +9,20 @@ import pathlib
 from functools import lru_cache
 from typing import Any
 
-from .core.structs import (
+from tk_utils_core.core.structs import (
         BaseConfig,
         Field,
         )
-from .core._typing import (
+from tk_utils_core.core._typing import (
         UNSET,
         TOMLStrOrNone,
         TOMLIntOrNone,
         )
+
+__all__ = [
+        'options',
+        'configure',
+        ]
 
 
 @lru_cache(maxsize=2)

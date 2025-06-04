@@ -11,6 +11,10 @@ from __future__ import annotations
 import re
 from functools import cached_property
 
+__all__ = [
+        'rgx',
+        ]
+
 def _rc(s, 
         dotall: bool = True,
         verbose: bool = True,

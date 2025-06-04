@@ -4,22 +4,22 @@ System utils
 """
 from __future__ import annotations
 
-from .core.system.pkgtools import (
+from tk_utils_core.core.system.pkgtools import (
         validate_dependencies,
         )
-from .core.system.runners import (
+from tk_utils_core.core.system.runners import (
         run,
         shell_exec,
         )
-from .core.system.compress import (
+from tk_utils_core.core.system.compress import (
         unzip,
         )
-from .core.system.safeio import (
+from tk_utils_core.core.system.safeio import (
         copy_with_parents,
         safe_copy,
         safe_copytree,
         )
-from .core.system.walk import (
+from tk_utils_core.core.system.walk import (
         walk,
         add_parents,
         add_parents_to_paths,

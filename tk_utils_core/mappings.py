@@ -14,7 +14,18 @@ from tk_utils_core.core.mappings import (
         deep_update,
         )
 
+
 from tk_utils_core.options import options
+
+
+__all__ = [
+    'map_dot_update',
+    'map_dot_get',
+    'map_dot_subset',
+    'deep_update',
+    'AttrDict',
+    ]
+
 
 
 class AttrDict(dict):
