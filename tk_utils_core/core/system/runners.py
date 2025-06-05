@@ -122,7 +122,7 @@ def _run_streaming(
 
     result = Result(
         cmd=' '.join(cmds),
-        stdout=stdout.strip(),
+        stdout='\n'.join(stdout_lines),
         stderr=stderr.strip(),
         rc=proc.returncode,
     )
