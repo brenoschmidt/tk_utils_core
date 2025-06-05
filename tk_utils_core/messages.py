@@ -100,6 +100,23 @@ class CaptureStdout(contextlib.AbstractContextManager):
     def __str__(self) -> str:
         return self.value
 
+def fmt_hdr_sep(
+        max_line_width: int,
+        sep: str = '-',
+        min_sep_width: int | None = None,
+        max_sep_width: int | None = None,
+        ) -> str:
+    """
+    Create a header separator string
+    """
+    min_sep_width = options.pp.width if min_sep_width is None else min_sep_width
+    max_sep_width = options.pp.width if max_sep_width is None else max_sep_width
+
+    sep_width = min(
+        max_sep_width,
+        max(min_sep_width, max_line_width)
+    )
+    return sep * sep_width
 
 def fmt_msg(
         msg: str | Iterable[str] | None, 
@@ -169,16 +186,13 @@ def fmt_msg(
     if not lines:
         lines = ['']
 
-    min_sep_width = options.pp.width if min_sep_width is None else min_sep_width
-    max_sep_width = options.pp.width if max_sep_width is None else max_sep_width
-
-    sep_width = min(
-        max_sep_width,
-        max(min_sep_width, max(len(x) for x in lines))
-    )
-
     if as_hdr:
-        hdr_sep = sep * sep_width
+        hdr_sep = fmt_hdr_sep(
+                sep=sep,
+                max_line_width=max(len(x) for x in lines),
+                min_sep_width=min_sep_width,
+                max_sep_width=max_sep_width,
+                )
         if lines == ['']:
             lines = [hdr_sep]
         else:
