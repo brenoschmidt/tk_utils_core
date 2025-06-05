@@ -19,6 +19,10 @@ from .doctests_runner import run_quiet_doctest
 
 __all__ = ["BaseTestCase", "run_tests", "main"]
 
+BLOCK_MSG_COLOR = 'green'
+INNER_MSG_COLOR = 'yellow'
+
+
 
 @lru_cache(1)
 def get_logger() -> logging.Logger:
@@ -28,7 +32,6 @@ def get_logger() -> logging.Logger:
         logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     return logger
-
 
 
 class BaseTestCase(unittest.TestCase):
@@ -62,9 +65,28 @@ class BaseTestCase(unittest.TestCase):
     __debug_enabled__: bool = False
     _only_in_debug = []
 
+    def __str__(self) -> str:
+        """
+        Custom test method message
+        """
+        # org = "%s (%s)" % (self._testMethodName, self.__class__.__module__ + "." + self.__class__.__qualname__)
+        msg = (
+                f"{self._testMethodName} "
+                f"({self.__class__.__module__}."
+                f"{self.__class__.__name__})"
+                )
+        if self.__debug_enabled__:
+            msg = '\n' + fmt_msg(
+                msg, 
+                color=BLOCK_MSG_COLOR, 
+                as_hdr=True)
+        return msg
+
     def shortDescription(self) -> str:
-        doc = self._testMethodDoc
-        return self._enclose(doc.rstrip() if doc else '')
+        doc = self._testMethodDoc.strip()
+        if doc and self.__debug_enabled__:
+            return fmt_msg(doc, color=INNER_MSG_COLOR)
+        
 
     def _enclose(self, s: str) -> str:
         lines = s.splitlines()
@@ -75,20 +97,23 @@ class BaseTestCase(unittest.TestCase):
         return f"{sep}\n{s}\n{sep}\n"
 
     def _run_doctest(self, func):
-        self._add_msg(f"\n{func.__name__}: running doctests")
+        self._add_msg(f"{func.__name__}: running doctests")
         return run_quiet_doctest(func)
 
     def _start_msg(
             self,
             msg: str | None = None,
             color: str | None = 'green',
-            as_hdr: bool = True,
+            as_hdr: bool = False,
             **kargs):
         """
-        Start a formatted message block.
+        Start a message block 
         """
         if self.__debug_enabled__:
-            print('\n' + fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
+            # This will add a linebreak after the "..."
+            print('\n')
+            if msg is not None or as_hdr:
+                print(fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
 
     def _add_msg(
             self,
