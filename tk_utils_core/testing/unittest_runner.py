@@ -76,7 +76,7 @@ class BaseTestCase(unittest.TestCase):
 
     def _run_doctest(self, func):
         self._add_msg(f"\n{func.__name__}: running doctests")
-        run_quiet_doctest(func)
+        return run_quiet_doctest(func)
 
     def _start_msg(
             self,
