@@ -6,8 +6,6 @@ from __future__ import annotations
 
 from collections.abc import MutableMapping
 from typing import Any
-from collections.abc import MutableMapping
-from typing import Any
 
 
 def deep_update(
@@ -69,8 +67,6 @@ def deep_update(
             updated_obj[k] = v
     return updated_obj
 
-
-
 def map_dot_get(
         base: MutableMapping,
         key: str) -> Any:
@@ -85,7 +81,6 @@ def map_dot_get(
             return None
         current = current[k]
     return current
-
 
 def map_dot_update(
         base: MutableMapping,
@@ -118,7 +113,6 @@ def map_dot_update(
             current[k] = type(base)()
         current = current[k]
     current[keys[-1]] = value
-
 
 def map_dot_subset(
         base: MutableMapping,
