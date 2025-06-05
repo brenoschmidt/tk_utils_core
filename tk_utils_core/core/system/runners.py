@@ -220,7 +220,7 @@ def shell_exec(
     if echo:
         print(f"Running (shell): {cmd}")
 
-    result = subprocess.run(
+    r = subprocess.run(
         cmd,
         shell=True,
         capture_output=True,
@@ -229,24 +229,17 @@ def shell_exec(
         **kargs,
     )
 
-    stdout = result.stdout or ''
-    stderr = result.stderr or ''
-    rc = result.returncode
+    result = Result(
+            cmd=cmd,
+            stdout = r.stdout or '',
+            stderr = r.stderr or '',
+            rc=r.returncode,
+            )
 
-    if not quiet and stdout:
-        print(stdout, end='')
+    if not quiet and result.stdout:
+        print(result.stdout, end='')
 
-    if check and rc != 0:
-        msg = f"Shell command failed [{rc}]: {cmd}"
-        if err_msg:
-            msg += f"\n{err_msg}"
-        if stderr:
-            msg += f"\n{stderr.strip()}"
-        raise RuntimeError(msg)
+    if check:
+        _assert_success(result, err_msg=err_msg)
 
-    return Result(
-        cmd=cmd,
-        stdout=stdout.splitlines(),
-        stderr=stderr.splitlines(),
-        rc=rc,
-    )
+    return result
