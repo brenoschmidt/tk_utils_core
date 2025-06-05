@@ -159,6 +159,7 @@ def run_tests(
         cls: type[BaseTestCase],
         debug: bool = False,
         verbosity: int = 2,
+        failfast: bool = True,
         *args,
         **kargs,
         ) -> None:
@@ -172,6 +173,8 @@ def run_tests(
     debug : bool, default False
         If True, only methods in `cls._only_in_debug` are run and debug
         output is enabled.
+    failfast: bool, default True
+        If True, stop remaining tests after a single failure
     verbosity : int
         Output verbosity level.
 
@@ -226,7 +229,10 @@ def run_tests(
     else:
         suite = unittest.defaultTestLoader.loadTestsFromTestCase(cls)
 
-    runner = unittest.TextTestRunner(verbosity=verbosity)
+    runner = unittest.TextTestRunner(
+            verbosity=verbosity,
+            failfast=failfast,
+            )
     runner.run(suite)
 
 
