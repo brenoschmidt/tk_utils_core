@@ -293,3 +293,42 @@ def run_doctest(
 
     return results
 
+def run_quiet_doctest(
+        obj: Callable,
+        globs: dict | None = None,
+        name: str | None = None,
+        ):
+    """
+    Run doctests silently
+
+    Parameters
+    ----------
+    obj : Callable
+        The object to test (function, method, or class).
+    globs : dict, optional
+        A dictionary of globals for the doctest environment.
+    name : str, optional
+        Optional name to override the default for the doctest.
+
+    Returns
+    -------
+    doctest.TestResults
+        The result object containing number of failures and attempts.
+
+    Raises
+    ------
+    Exception
+        If any doctest fails.
+    """
+    return run_doctest(
+            obj=obj,
+            name=name,
+            globs=globs,
+            print_docstring=False,
+            print_examples=False,
+            print_hdr=False,
+            print_mod=False,
+            verbose=False,
+            )
+
+
