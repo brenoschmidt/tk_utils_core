@@ -3,6 +3,8 @@ Utilities for representing objects as strings in diagnostic messages
 """
 from __future__ import annotations
 
+import contextlib
+import io
 from typing import Iterable
 
 from tk_utils_core.core.messages.errors import (
@@ -59,8 +61,42 @@ __all__ = [
         'LogParms',
         'LogFunc',
         'logfunc',
+        'CapureStdout',
         ]
 
+
+
+
+class CaptureStdout(contextlib.AbstractContextManager):
+    """
+    Context manager that captures stdout and returns it as a string.
+
+    Usage
+    -----
+    >>> with CaptureStdout() as output:
+    ...     help(len)
+    >>> print(str(output)[:10])
+    'Help on '
+    """
+
+    def __enter__(self) -> CaptureStdout:
+        self._buf = io.StringIO()
+        self._ctx = contextlib.redirect_stdout(self._buf)
+        self._ctx.__enter__()
+        return self
+
+    def __exit__(
+            self,
+            exc_type,
+            exc_val,
+            exc_tb) -> bool | None:
+        self._ctx.__exit__(exc_type, exc_val, exc_tb)
+        self.value = self._buf.getvalue()
+        self._buf.close()
+        return None  # Let exceptions propagate
+
+    def __str__(self) -> str:
+        return self.value
 
 
 def fmt_msg(
