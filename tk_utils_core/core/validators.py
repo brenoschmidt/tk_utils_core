@@ -80,9 +80,12 @@ def is_namedtuple(obj: Any) -> bool:
 
 def is_pydantic_dc(obj) -> bool:
     """
-    Return True if a pydantic dataclass
+    Return True if a pydantic dataclass or an instance of a pydantic dataclass
     """
-    return pydantic.dataclasses.is_pydantic_dataclass(obj)
+    return any([
+            pydantic.dataclasses.is_pydantic_dataclass(obj),
+            pydantic.dataclasses.is_pydantic_dataclass(type(obj))])
+
 
 def is_pydantic_model(obj) -> bool:
     """
