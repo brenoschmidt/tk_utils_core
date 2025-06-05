@@ -152,7 +152,7 @@ def value_err_msg(
     Examples
     --------
     >>> value_err_msg('mode', 'fast', ['slow', 'medium'])
-    "Invalid value for `mode`: `fast` Expecting 'slow' or 'medium'"
+    'Invalid value for `mode`: `fast` Expecting slow or medium'
     """
     _name = fmt_name(name)
     _value = fmt_name(value)

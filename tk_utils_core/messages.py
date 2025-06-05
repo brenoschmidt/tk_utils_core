@@ -24,6 +24,7 @@ from tk_utils_core.core.messages.formatters import (
         tdelta_to_ntup,
         fmt_elapsed,
         fmt_value,
+        trim_values,
         )
 from tk_utils_core.core.messages.logtools import (
         Tee,
@@ -58,6 +59,7 @@ __all__ = [
         'fmt_elapsed',
         'tdelta_to_ntup',
         'Tee',
+        'trim_values',
         'LogParms',
         'LogFunc',
         'logfunc',

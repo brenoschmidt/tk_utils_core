@@ -78,6 +78,18 @@ def justify_values(
     fmt = _map_justify(how)
     return tuple(f'{v:{fmt}{width}}' for v in values)
 
+def trim_values(values: Iterable[str]) -> tuple[str, ...]:
+    """
+    Removes leading and trailing whitespaces which appear in all 
+    values of an iterable
+    """
+    while all(x[-1] == ' ' for x in values):
+        values = [x[:-1] for x in values]
+
+    while all(x[0] == ' ' for x in values):
+        values = [x[1:] for x in values]
+    return tuple(values)
+
 def align_by_char(
         values: Iterable[str],
         char: str,
@@ -107,38 +119,53 @@ def align_by_char(
     Examples
     --------
     >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='left')
-    (' abc:def', '   a:xxx', '   long  ')
+    (' abc:def', '   a:xxx', 'long   ')
 
     >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='right')
     ('abc:def ', '  a:xxx ', '    long')
 
     >>> align_by_char(['abc:def', 'a:xxx', 'long'], char=':', how='center')
-    (' abc:def ', '  a:xxx ', '   long   ')
+    (' abc:def', '   a:xxx', '  long  ')
     """
     values = tuple(values)
     splits = []
-    for v in values:
+    _empty_char = ''
+    tracker = []
+    for i, v in enumerate(values):
+        _char = _empty_char
         if char in v:
             l, r = v.split(char, 1)
+            _char = char
+        elif how == 'right':
+            l, r = '', v
         else:
             l, r = v, ''
-        splits.append((l, r))
+        splits.append((l, r, _char))
 
-    left_width = max(len(l) for l, _ in splits)
-    right_width = max(len(r) for _, r in splits)
+    left_width = max(len(l) for l, _, _ in splits)
+    right_width = max(len(r) for _, r, _ in splits)
 
     result = []
-    for l, r in splits:
+    for l, r, _char in splits:
         if how == 'left':
-            result.append(f"{l.rjust(left_width)}{char}{r.ljust(right_width)}")
+            result.append(f"{l.rjust(left_width)}{_char}{r.ljust(right_width)}")
         elif how == 'right':
-            result.append(f"{l.rjust(left_width)}{char}{r.ljust(right_width)}".rjust(left_width + right_width + 1))
+            result.append(f"{l.rjust(left_width)}{_char}{r.ljust(right_width)}".rjust(left_width + right_width + 1))
         elif how == 'center':
             total_width = left_width + right_width + 1
-            content = f"{l.rjust(left_width)}{char}{r.ljust(right_width)}"
+            content = f"{l.rjust(left_width)}{_char}{r.ljust(right_width)}"
             result.append(content.center(total_width))
         else:
             raise ValueError(f"Invalid how: {how!r}")
+
+    # Trim
+    result = trim_values(result) 
+
+    if how == 'center':
+        max_len = max(len(x) for x in result)
+        
+        result = [x if char in x else x.strip().center(max_len) for x in result]
+
     return tuple(result)
 
 def align(
@@ -182,20 +209,47 @@ def align(
 
     Examples
     --------
-    >>> align([('a', '1.2'), ('bb', '22.22')])
-    'a  1.2  \\nbb 22.22'
+    >>> res = align([('a', '1.2'), ('bb', '22.22')], char='.')
+    >>> print(res)
+    a   1.2 
+    bb 22.22
 
-    >>> align(['x', 'yy', 'zzz'], how='right')
-    '  x\\n yy\\nzzz'
+    >>> res = align([('a', '1.2'), ('bb', '22.22')], char='.', how='center')
+    >>> print(res)
+    a   1.2
+    bb 22.22
 
-    >>> align([('a', '1.2'), ('bb', '22.22')], char='.')
-    'a  1.2 \\nbb 22.22'
+    >>> res = align([('a', '1.2'), ('bbb', '22.22')], char='.', how='center')
+    >>> print(res)
+     a   1.2
+    bbb 22.22
 
-    >>> align([('abc:def',), ('a:xxx',), ('long',)], char=':', how='left')
-    ' abc:def\\n   a:xxx\\n   long  '
+    >>> res = align([('a', '1.2'), ('bb', '22.22')])
+    >>> print(res)
+    a  1.2
+    bb 22.22
 
-    >>> align([('abc:def',), ('a:xxx',), ('long',)], char=':', how='right')
-    'abc:def \\n  a:xxx \\n    long'
+    >>> res = align([('a', '1.2'), ('bb', '22.22')], how='center')
+    >>> print(res)
+    a   1.2
+    bb 22.22
+
+    >>> res = align([('a', '1.2'), ('bbb', '22.22')], how='center')
+    >>> print(res)
+     a   1.2
+    bbb 22.22
+
+    >>> res = align([('a', '1.2'), ('bb', '22.22')], how='right')
+    >>> print(res)
+     a   1.2
+    bb 22.22
+
+    >>> res = align(['x', 'yy', 'zzz'], how='right')
+    >>> print(res)
+      x
+     yy
+    zzz
+
     """
 
     # Normalize input rows
@@ -232,10 +286,11 @@ def align(
         if min_width:
             width = max(min_width, max(len(v) for v in col_values))
             col_values = tuple(f'{v:<{width}}' for v in col_values)
-        if h is not None:
-            col_values = justify_values(col_values, h)
-        if c is not None:
+
+        if c is not None and any(c in x for x in col_values):
             col_values = align_by_char(col_values, char=c, how=h or 'left')
+        else:
+            col_values = justify_values(col_values, h)
         aligned_cols.append(col_values)
 
     # Transpose back to rows
@@ -414,7 +469,7 @@ def fmt_str(
     >>> fmt_str("  indented", dedent=True)
     'indented'
     >>> fmt_str("a b c d e f g", width=5, max_lines=2)
-    'a b\\nc d [...]'
+    'a b c\\n[...]'
     """
     text = textwrap.dedent(s) if dedent else s
 
@@ -434,7 +489,7 @@ def fmt_str(
 def fmt_value(
         value: object,
         none_as_empty: bool = False,
-        representer: Callable[[object], str] = repr,
+        representer: Callable[[object], str] = str,
         **kargs) -> str:
     """
     Format an object as a string for display in messages.
@@ -449,7 +504,7 @@ def fmt_value(
         If True, represent `None` as an empty string. Otherwise, return
         "None".
 
-    representer : Callable[[object], str], default=repr
+    representer : Callable[[object], str], default=str
         Function used to convert the object to a string.
 
     **kargs
@@ -463,16 +518,18 @@ def fmt_value(
 
     Examples
     --------
-    >>> fmt_value(None)
+    >>> fmt_value(None, none_as_empty=True)
     ''
     >>> fmt_value(None, none_as_empty=False)
     'None'
     >>> fmt_value([1, 2, 3], representer=str)
     '[1, 2, 3]'
-    >>> fmt_value("abc def ghi", width=5)
-    'abc\\ndef\\nghi'
+    >>> fmt_value("abc def ghi", width=5, representer=repr)
+    "'abc\\ndef\\nghi'"
     >>> fmt_value("a" * 100, max_lines=1, width=10)
-    'aaaaaaaaaa [...]'
+    '[...]'
+    >>> fmt_value("a" * 100, max_lines=2, width=10)
+    'aaaaaaaaaa\\n[...]'
     """
     if value is None:
         return "" if none_as_empty else "None"
