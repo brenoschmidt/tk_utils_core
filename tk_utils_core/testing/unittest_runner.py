@@ -15,6 +15,7 @@ from functools import lru_cache
 
 from ..messages import colorize, fmt_msg
 from ..options import options
+from .doctests_runner import run_quiet_doctest
 
 __all__ = ["BaseTestCase", "run_tests", "main"]
 
@@ -27,6 +28,7 @@ def get_logger() -> logging.Logger:
         logger.addHandler(handler)
     logger.setLevel(logging.DEBUG)
     return logger
+
 
 
 class BaseTestCase(unittest.TestCase):
@@ -71,6 +73,10 @@ class BaseTestCase(unittest.TestCase):
         length = max(len(x) for x in lines)
         sep = '-' * length
         return f"{sep}\n{s}\n{sep}\n"
+
+    def _run_doctest(self, func):
+        self._add_msg("\nrunning doctests")
+        run_quiet_doctest(func)
 
     def _start_msg(
             self,
