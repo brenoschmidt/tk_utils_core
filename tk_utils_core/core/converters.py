@@ -67,9 +67,28 @@ class _AsDictOpts:
     none_as_empty: bool
     convert_ntups: bool
 
+def _dc_to_dict(obj, opts: _AsDictOpts):
+    return _as_dict( dc.asdict(obj, dict_factory=opts.dict_factory), opts)
+
+def _ntup_to_dict(obj, opts: _AsDictOpts):
+    if opts.convert_ntups:
+        return opts.dict_factory(
+            (k, _as_dict(getattr(obj, k), opts)) for k in obj._fields)
+    else:
+        return type(obj)(*[_as_dict(v, opts) for v in obj])
+
+def _map_to_dict(obj, opts: _AsDictOpts):
+    return opts.dict_factory(
+            (_as_dict(k, opts), _as_dict(v, opts)) for k, v in obj.items())
+
+def _ns_to_dict(obj, opts: _AsDictOpts):
+    return opts.dict_factory(
+            (k, _as_dict(v, opts)) for k, v in obj.__dict__.items())
+
 def _as_dict(obj: Any, opts: _AsDictOpts):
     """
     """
+
     if obj is None:
         if opts.none_as_empty is True:
             return opts.dict_factory()
@@ -78,18 +97,15 @@ def _as_dict(obj: Any, opts: _AsDictOpts):
     elif isinstance(obj, AtomicTypes):
         return obj
     elif dc.is_dataclass(obj):
-        return _as_dict(dc.asdict(obj, dict_factory=opts.dict_factory), opts)
+        return _dc_to_dict(obj, opts)
     elif is_pydantic_dc(obj) or is_pydantic_model(obj):
         return _as_dict(obj.model_dump(), opts)
     elif is_namedtuple(obj):
-        if opts.convert_ntups:
-            return opts.dict_factory(
-                (k, _as_dict(getattr(obj, k), opts)) for k in obj._fields)
-        else:
-            return type(obj)(*[_as_dict(v, opts) for v in obj])
+        return _ntup_to_dict(obj, opts)
     elif isinstance(obj, MutableMapping):
-        return opts.dict_factory((_as_dict(k, opts), _as_dict(v, opts)) 
-                                 for k, v in obj.items())
+        return _map_to_dict(obj, opts)
+    elif isinstance(obj, SimpleNamespace):
+        return _ns_to_dict(obj, opts)
     elif isinstance(obj, (tuple, MutableSequence, set)):
         return type(obj)(_as_dict(v, opts) for v in obj)
     else:
