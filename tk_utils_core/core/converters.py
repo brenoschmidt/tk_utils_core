@@ -373,9 +373,6 @@ def human2bytes(s: str, base: int = 1024) -> int:
     return int(size * (base ** pwr))
 
 
-
-
-
 def to_namespace(base: MutableMapping) -> SimpleNamespace:
     """
     Recursively convert a nested dictionary into a SimpleNamespace.
