@@ -330,8 +330,6 @@ def obj_dot_get(obj: object, attr: str) -> Any:
     Returns None if any intermediate attribute is missing.
     """
     for name in attr.split('.'):
-        if not hasattr(obj, name):
-            return None
         obj = getattr(obj, name)
     return obj
 
@@ -456,27 +454,32 @@ def obj_dot_subset(
 
     """
     out = _copy.deepcopy(obj)
+
+    # Start with all attributes
     all_attrs = set(get_all_dot_attrs(
         out, 
         force_public=force_public,
         ))
-    if includes is not None:
-        includes = as_set(includes, none_as_empty=False)
-        invalid = [x for x in includes if x not in all_attrs]
-        if len(invalid) > 0:
-            raise ValueError(
-                    f"The following `includes` are not in `obj`"
-                    f"{str(invalid)}")
 
-        keep = includes
-                
-    else:
-        keep = all_dirs
+    keep = set(all_attrs)
 
-    if excludes is not None:
-        excludes = as_set(excludes, none_as_empty=False)
-        keep -= excludes
-    
+    # Excludes
+    if excludes:
+        def _keep(key):
+            for k in excludes:
+                if key.startswith(k):
+                    return False
+            return True
+        keep = set(x for x in keep if _keep(x))
+
+    # includes
+    if includes:
+        def _keep(key):
+            for k in includes:
+                if key.startswith(k):
+                    return True
+            return False
+        keep = set(x for x in keep if _keep(x))
 
     for attr in all_attrs:
         if attr not in keep:
