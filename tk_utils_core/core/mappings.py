@@ -7,6 +7,8 @@ from __future__ import annotations
 from collections.abc import MutableMapping
 from typing import Any
 
+from .converters import as_set
+
 
 def deep_update(
         obj: MutableMapping, 
@@ -72,13 +74,11 @@ def map_dot_get(
         key: str) -> Any:
     """
     Retrieve value from a nested mapping using dot-separated key.
-    Returns None if any intermediate key is missing.
+    Raise if intermediate key does not exist
     """
     keys = key.split(".")
     current = base
     for k in keys:
-        if not isinstance(current, MutableMapping) or k not in current:
-            return None
         current = current[k]
     return current
 
@@ -140,21 +140,32 @@ def map_dot_subset(
     """
     result = type(base)()
 
+    excludes = as_set(excludes, none_as_empty=True)
+
     # Determine which keys to keep
-    def get_all_keys(d: MutableMapping, prefix="") -> list[str]:
-        keys = []
+    def select_keys(d: MutableMapping, prefix="") -> list[str]:
+        keys = set()
         for k, v in d.items():
             full = f"{prefix}.{k}" if prefix else k
+            # Remove all children
+            if full in excludes:
+                continue
             if isinstance(v, MutableMapping):
-                keys.extend(get_all_keys(v, full))
+                keys = keys | select_keys(v, full)
             else:
-                keys.append(full)
+                keys.add(full)
         return keys
 
-    all_keys = get_all_keys(base)
-    selected_keys = all_keys if includes is None else [k for k in includes if k in all_keys]
-    if excludes:
-        selected_keys = [k for k in selected_keys if k not in excludes]
+    selected_keys = select_keys(base)
+
+
+    if includes:
+        def chk(key):
+            for k in includes:
+                if key.startswith(k):
+                    return True
+            return False
+        selected_keys = set(x for x in selected_keys if chk(x))
 
     # Build the result mapping
     for key in selected_keys:
