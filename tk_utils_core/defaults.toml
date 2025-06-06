@@ -54,7 +54,7 @@ dropbox_zip="./_dropbox/tookit.zip"
 [github.tk_utils]
 user="brenoschmidt"
 repo="toolkit"
-branch="main" # Should not be blank
+branch="main" 
 base="tk_utils"
 modules=[
     "__init__.py",
@@ -63,7 +63,7 @@ modules=[
 [github.tk_utils_core]
 user="brenoschmidt"
 repo="tk_utils_core"
-branch=""
+branch="main"
 
 [dropbox]
 url=""
