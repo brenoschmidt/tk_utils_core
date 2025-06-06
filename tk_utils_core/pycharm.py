@@ -645,6 +645,7 @@ class SysUtils:
                     repo=options.github.tk_utils.repo, 
                     branch=options.github.tk_utils.branch, 
                     base=options.github.tk_utils.base, 
+                    assert_exists=True,
                     )
         tk_utils_files = {
                 x: f"{tk_utils_base}/{x}" 
@@ -671,6 +672,7 @@ class SysUtils:
                     user=options.github.tk_utils_core.user, 
                     repo=options.github.tk_utils_core.repo, 
                     branch=options.github.tk_utils_core.branch, 
+                    assert_exists=True,
                     )
         cmd = [
                 str(pipexec), 
@@ -681,14 +683,15 @@ class SysUtils:
         run(cmd)
 
 
-    def update_tk_utils(self):
+    def update_tk_utils(self, skip_core: bool = False):
         """
         Forcibly update tk_utils and tk_utils_core
         """
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
         self._update_tk_utils()
-        self._reinstall_tk_utils_core()
+        if not skip_core:
+            self._reinstall_tk_utils_core()
         msg = [
                 'PLEASE START A NEW INTERACTIVE SESSION',
                 ]
