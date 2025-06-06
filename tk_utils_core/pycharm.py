@@ -669,6 +669,7 @@ class SysUtils:
         tgt = github.git_url(
                     user=options.github.tk_utils_core.user, 
                     repo=options.github.tk_utils_core.repo, 
+                    branch=options.github.tk_utils_core.branch, 
                     )
         cmd = [
                 str(pipexec), 
