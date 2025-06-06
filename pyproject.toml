@@ -29,6 +29,7 @@ dependencies = [
     "ruamel.yaml",
     "pydantic>=2,<3",
     "pandas",
+    "parso",
     # Pandas optional dependencies
     "numexpr",
     "bottleneck",
