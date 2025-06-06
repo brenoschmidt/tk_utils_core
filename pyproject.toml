@@ -24,11 +24,16 @@ classifiers = [
 dependencies = [
     "packaging",
     "yfinance",
-    "pandas",
     "numpy",
     "requests",
     "ruamel.yaml",
     "pydantic>=2,<3",
+    "pandas",
+    # Pandas optional dependencies
+    "numexpr",
+    "bottleneck",
+    "numba",
+    "tabulate",
 ]
 
 [project.urls]
