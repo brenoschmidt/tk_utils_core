@@ -111,7 +111,7 @@ class PyCharm(BaseConfig):
 class Options(BaseConfig):
     """
     """
-    debug: bool = False
+    debug: bool
     pretty_errors: PrettyErrors
     doctests: Doctests
     pycharm: PyCharm
