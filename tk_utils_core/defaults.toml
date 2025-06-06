@@ -62,7 +62,7 @@ modules=[
 [github.tk_utils_core]
 user="brenoschmidt"
 repo="tk_utils_core"
-branch="main"
+branch=""
 
 [dropbox]
 url=""
