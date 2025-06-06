@@ -14,7 +14,8 @@ from ..converters import as_path
 
 def download_to_tmp(url: str) -> pathlib.Path:
     """
-    Request and download to a temporary file and return its location
+    Request and download to a temporary file and return its location.
+    Returns None on failure.
     """
     try:
         r = requests.get(url, timeout=10)
@@ -28,6 +29,7 @@ def download_to_tmp(url: str) -> pathlib.Path:
         return tmp 
     except Exception as e:
         print(f"Download failed: {e}")
+
 
 
 def download(

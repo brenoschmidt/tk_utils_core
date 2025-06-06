@@ -352,15 +352,6 @@ def walk(
     str | Path
         File paths matching the criteria.
 
-    Examples
-    --------
-    >>> list(walk(root=".", incl_files="*.py"))
-    [PosixPath('script.py'), PosixPath('test/test_util.py')]
-
-    >>> list(walk(
-    ...     root="src", incl_dirs=["core"], excl_files=["test_*"]
-    ... ))
-    [PosixPath('src/core/main.py')]
     """
     parms = WalkParms(
         root=root,

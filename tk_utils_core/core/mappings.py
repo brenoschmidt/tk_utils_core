@@ -28,8 +28,6 @@ def deep_update(
 
     Examples
     --------
-    >>> from tk_core.utils import deep_update
-
     >>> dic = {'a': {'b': 1, 'c': 2}}
     >>> dic.update({'a': {'c': 99}}) # Normal update
     >>> print(dic)
