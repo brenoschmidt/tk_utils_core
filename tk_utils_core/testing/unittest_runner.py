@@ -83,7 +83,8 @@ class BaseTestCase(unittest.TestCase):
         return msg
 
     def shortDescription(self) -> str:
-        doc = self._testMethodDoc.strip()
+        doc = self._testMethodDoc
+        doc = doc.strip() if doc else ''
         if doc and self.__debug_enabled__:
             return fmt_msg(doc, color=INNER_MSG_COLOR)
         
