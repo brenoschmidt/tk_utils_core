@@ -111,7 +111,7 @@ class BaseTestCase(unittest.TestCase):
         """
         if self.__debug_enabled__:
             # This will add a linebreak after the "..."
-            print('\n')
+            print(' ')
             if msg is not None or as_hdr:
                 print(fmt_msg(msg, color=color, as_hdr=as_hdr, **kargs))
 
