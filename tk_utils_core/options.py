@@ -66,6 +66,7 @@ class TkUtilsGithub(BaseConfig):
     """
     user: str
     repo: str
+    branch: str
     base: str
     modules: list[str]
 

@@ -12,8 +12,15 @@ def git_url(user: str, repo: str, branch: str | None = None):
         tgt = f"{tgt}@{branch}"
     return tgt
 
-def cnts_url(user: str, repo: str, branch: str):
-    return f"https://raw.githubusercontent.com/{user}/{repo}/{branch}"
+def cnts_url(
+        user: str, 
+        repo: str, 
+        branch: str,
+        base: str | None = None):
+    out = f"https://raw.githubusercontent.com/{user}/{repo}/{branch}"
+    if base:
+        out = f"{out}/{base}"
+    return out
 
 
 
