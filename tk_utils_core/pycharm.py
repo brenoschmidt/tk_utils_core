@@ -693,6 +693,7 @@ class SysUtils:
         if not skip_core:
             self._reinstall_tk_utils_core()
         msg = [
+                '',
                 'PLEASE START A NEW INTERACTIVE SESSION',
                 ]
         print(fmt_msg(msg, as_hdr=True))
