@@ -43,7 +43,6 @@ def as_path(pth: str | pathlib.Path) -> pathlib.Path:
     Examples
     --------
     >>> import pathlib
-    >>> from tk_utils.converters import as_path
     >>> pth = 'path_to_file'
     >>> print(pth, type(pth))
     path_to_file <class 'str'>
