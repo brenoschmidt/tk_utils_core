@@ -74,6 +74,7 @@ class TkUtilsCoreGithub(BaseConfig):
     """
     user: str
     repo: str
+    branch: str
 
 class Dropbox(BaseConfig):
     """
