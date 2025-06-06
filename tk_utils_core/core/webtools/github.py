@@ -53,10 +53,7 @@ def git_url(
 
     """
     if assert_exists is True:
-        if branch:
-            assert_github_branch(user=user, repo=repo, branch=branch)
-        else:
-            assert_github_repo(user=user, repo=repo)
+        assert_github_branch(user=user, repo=repo, branch=branch)
     tgt = f"https://github.com/{user}/{repo}.git"
     if branch:
         tgt = f"{tgt}@{branch}"
@@ -114,10 +111,7 @@ def cnts_url(
 
     """
     if assert_exists is True:
-        if branch:
-            assert_github_branch(user=user, repo=repo, branch=branch)
-        else:
-            assert_github_repo(user=user, repo=repo)
+        assert_github_branch(user=user, repo=repo, branch=branch)
     out = f"https://raw.githubusercontent.com/{user}/{repo}/{branch}"
     if base:
         out = f"{out}/{base}"
