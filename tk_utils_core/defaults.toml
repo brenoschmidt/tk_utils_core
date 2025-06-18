@@ -68,3 +68,13 @@ branch="main"
 [dropbox]
 url=""
 
+[describe]
+quiet = false
+show_doc = true
+show_decor = false
+show_body = false
+show_sig = false
+
+
+
+

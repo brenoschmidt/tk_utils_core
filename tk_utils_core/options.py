@@ -110,10 +110,22 @@ class PyCharm(BaseConfig):
     prjname: str
     paths: PyCharmPaths
 
+class Describe(BaseConfig):
+    """
+    Controls the `describe` decorator
+    """
+    quiet: bool
+    show_doc: bool
+    show_decor: bool
+    show_body: bool
+    show_sig: bool
+
+
 class Options(BaseConfig):
     """
     """
     debug: bool
+    describe: Describe
     pretty_errors: PrettyErrors
     doctests: Doctests
     pycharm: PyCharm
