@@ -28,8 +28,8 @@ dependencies = [
     "requests",
     "ruamel.yaml",
     "pydantic>=2,<3",
-    "pandas",
     "parso",
+    "pandas",
     # Pandas optional dependencies
     "numexpr",
     "bottleneck",
@@ -40,3 +40,5 @@ dependencies = [
 [project.urls]
 homepage = "https://github.com/brenoschmidt/tk_utils_core"
 
+[project.optional-dependencies]
+docs = ["pdoc>=15"]
