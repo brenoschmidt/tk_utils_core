@@ -1,5 +1,5 @@
 """
-Parsers for Python functions using `parso`.
+Parsers for Python objects using `parso`.
 
 """
 from __future__ import annotations
@@ -194,7 +194,6 @@ class _ParsedFuncNodes:
         out = self.func.get_decorators()
         return out if len(out) > 0 else None
 
-
 class _ParsedFuncCodes:
     """
     Produces source code strings for components extracted by `_ParsedFuncNodes`.
@@ -256,10 +255,10 @@ class _ParsedFuncCodes:
         nodes = self._nodes.body
         return ''.join(n.get_code() for n in nodes) if nodes else ''
 
-
-class ParsedFunc:
+class ParsedFuncCode:
     """
-    Parses a Python function into structured components using `parso`.
+    Parses the source code of a Python function into structured components
+    using `parso`.
 
     This class allows introspection of decorators, signature, docstring,
     and body, and provides a method to return those parts as dedented strings.
@@ -267,44 +266,20 @@ class ParsedFunc:
 
     def __init__(
             self,
-            obj: Callable | None = None,
             name: str | None = None,
             src: str | None = None,
             ):
         """
         Parameters
         ----------
-        obj : Callable, optional
-            A Python function object. If provided, `src` must be None.
+        name : str
+            Name of the function
 
-        name : str, optional
-            Name of the function. Required if `src` is provided.
-
-        src : str, optional
-            Source code containing a function definition. If provided,
-            `obj` must be None.
-
-        Raises
-        ------
-        ValueError
-            If both `obj` and `src` are provided or both are None.
+        src : str
+            Source code containing a function definition
         """
-        if obj is not None and src is not None:
-            raise ValueError(
-                    f"Parms `src` and `obj` cannot be both None")
-        elif obj is not None and src is not None:
-            raise ValueError(
-                    f"One of `obj` and `src` must not be None")
-        elif obj is not None:
-            self.obj = obj
-            self.src = inspect.getsource(obj)
-            self.name = self.obj.__name__
-        elif name is None:
-            raise ValueError("Parm `name` must not be None if `src` is not None")
-        else:
-            self.name = name
-            self.src = src
-            self.obj = None
+        self.name = name
+        self.src = src
 
     @cached_property
     def tree(self) -> parso.python.tree.Module:
@@ -381,6 +356,72 @@ class ParsedFunc:
         # The following should not happen...
         return 0
 
+    def mk_sig(self, attrs: list[str]) -> str:
+        """
+        Return a custom signature string composed of selected attributes.
+
+        Parameters
+        ----------
+        attrs : list of str
+            Subset of attributes from the function's parsed parts to include.
+
+        Returns
+        -------
+        str
+            Concatenated source code for the selected signature nodes.
+        """
+        nodes = self.nodes.mk_sig_nodes(attrs)
+        return ''.join(n.get_code() for n in nodes)
+
+class ParsedFunc(ParsedFuncCode):
+    """
+    Parse a Python function into structured components using `parso`.
+
+    This class allows introspection of decorators, signature, docstring,
+    and body, and provides a method to return those parts as dedented strings.
+    """
+
+    def __init__(
+            self,
+            obj: Callable | None = None,
+            name: str | None = None,
+            src: str | None = None,
+            ):
+        """
+        Parameters
+        ----------
+        obj : Callable, optional
+            A Python function object. If provided, `src` must be None.
+
+        name : str, optional
+            Name of the function. Required if `src` is provided.
+
+        src : str, optional
+            Source code containing a function definition. If provided,
+            `obj` must be None.
+
+        Raises
+        ------
+        ValueError
+            If both `obj` and `src` are provided or both are None.
+        """
+        if obj is not None and src is not None:
+            raise ValueError(
+                    f"Parms `src` and `obj` cannot be both None")
+        elif obj is not None and src is not None:
+            raise ValueError(
+                    f"One of `obj` and `src` must not be None")
+        elif obj is not None:
+            self.obj = obj
+            src = inspect.getsource(obj)
+            name = self.obj.__name__
+        elif name is None:
+            raise ValueError("Parm `name` must not be None if `src` is not None")
+        else:
+            self.obj = None
+
+        super().__init__(src=src, name=name)
+
     def as_ntup(
             self,
             dedent: bool = True,
@@ -415,22 +456,5 @@ class ParsedFunc:
         if use_doc_attr is True and self.obj is not None:
             kargs['doc'] = self.obj.__doc__
         return ntup(**kargs)
-
-    def mk_sig(self, attrs: list[str]) -> str:
-        """
-        Return a custom signature string composed of selected attributes.
-
-        Parameters
-        ----------
-        attrs : list of str
-            Subset of attributes from the function's parsed parts to include.
-
-        Returns
-        -------
-        str
-            Concatenated source code for the selected signature nodes.
-        """
-        nodes = self.nodes.mk_sig_nodes(attrs)
-        return ''.join(n.get_code() for n in nodes)
 
 
