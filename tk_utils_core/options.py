@@ -21,6 +21,7 @@ from typing import Any
 from tk_utils_core.core.structs import (
         BaseConfig,
         Field,
+        unflatten_dict,
         )
 from tk_utils_core.core._typing import (
         UNSET,
@@ -304,6 +305,7 @@ class Options(BaseConfig):
         >>> assert options.pp.color != 'red'
         """
         original = self.model_dump()
+        updates = unflatten_dict(updates)
         self._update(updates)
         try:
             yield
