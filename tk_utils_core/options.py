@@ -6,8 +6,7 @@ Notes
 
 To temporarily modify options:
 
-> with options.updated(:
->     options._update({'debug': True})
+> with options.set_values({'debug': True}):
 >     some_func()
          
 """
@@ -43,7 +42,20 @@ def load_toml_defaults(path: str | pathlib.Path) -> dict[str, Any]:
 
 class PP(BaseConfig):
     """
-    Pretty-printing options
+    Pretty-printing options.
+
+    Controls how objects are formatted for display.
+
+    Parameters
+    ----------
+    color : TOMLStrOrNone
+    indent : str
+    pretty : bool
+    sort_dicts : bool
+    depth : TOMLIntOrNone
+    underscore_numbers : bool
+    width : int
+    compact : bool
     """
     color: TOMLStrOrNone 
     indent: str
@@ -57,7 +69,16 @@ class PP(BaseConfig):
 
 class Doctests(BaseConfig):
     """
-    Doctests options
+    Options for controlling doctest output.
+
+    Parameters
+    ----------
+    print_docstring : bool
+    print_examples : bool
+    print_hdr : bool
+    print_mod : bool
+    verbose : bool
+    compileflags : bool
     """
     print_docstring: bool
     print_examples: bool
@@ -68,7 +89,13 @@ class Doctests(BaseConfig):
 
 class PrettyErrors(BaseConfig):
     """
-    Configuration options for the pretty_error module
+    Configuration for the pretty_errors module.
+
+    Parameters
+    ----------
+    pretty_errors : bool
+    line_number_first : bool
+    display_link : bool
     """
     pretty_errors: bool
     line_number_first: bool
@@ -76,7 +103,15 @@ class PrettyErrors(BaseConfig):
 
 class TkUtilsGithub(BaseConfig):
     """
-    Location of the tk_utils module in Github
+    Location of the tk_utils GitHub repository.
+
+    Parameters
+    ----------
+    user : str
+    repo : str
+    branch : str
+    base : str
+    modules : list[str]
     """
     user: str
     repo: str
@@ -86,7 +121,13 @@ class TkUtilsGithub(BaseConfig):
 
 class TkUtilsCoreGithub(BaseConfig):
     """
-    Location of the tk_utils module in Github
+    Location of the tk_utils_core GitHub repository.
+
+    Parameters
+    ----------
+    user : str
+    repo : str
+    branch : str
     """
     user: str
     repo: str
@@ -94,12 +135,22 @@ class TkUtilsCoreGithub(BaseConfig):
 
 class Dropbox(BaseConfig):
     """
-    Dropbox shared folder URL
+    Dropbox shared folder configuration.
+
+    Parameters
+    ----------
+    url : str
     """
     url: TOMLStrOrNone 
 
 class Github(BaseConfig):
     """
+    GitHub configuration for tk_utils and tk_utils_core.
+
+    Parameters
+    ----------
+    tk_utils: TkUtilsGithub
+    tk_utils_core: TkUtilsCoreGithub
     """
     tk_utils: TkUtilsGithub 
     tk_utils_core: TkUtilsCoreGithub
@@ -107,7 +158,19 @@ class Github(BaseConfig):
 
 class PyCharmPaths(BaseConfig):
     """
-    Location of files and folders in PyCharm
+    Paths related to PyCharm project structure.
+
+    Parameters
+    ----------
+    root : str
+    backup : str
+    dropbox : str
+    venv : str
+    idea : str
+    tk_utils : str
+    toolkit_config : str
+    tk_utils_config : str
+    dropbox_zip : str
     """
     root: str
     backup: str
@@ -122,6 +185,13 @@ class PyCharmPaths(BaseConfig):
 
 class PyCharm(BaseConfig):
     """
+    PyCharm project options.
+
+    Parameters
+    ----------
+    validate_paths : bool
+    prjname : str
+    paths : PyCharmPaths
     """
     validate_paths: bool
     prjname: str
@@ -129,7 +199,15 @@ class PyCharm(BaseConfig):
 
 class Describe(BaseConfig):
     """
-    Controls the `describe` decorator
+    Options for the `describe` decorator.
+
+    Parameters
+    ----------
+    quiet : bool
+    show_doc : bool
+    show_decor : bool
+    show_body : bool
+    show_sig : bool
     """
     quiet: bool
     show_doc: bool
@@ -140,6 +218,46 @@ class Describe(BaseConfig):
 
 class Options(BaseConfig):
     """
+    Configuration options for the `tk_utils_core` module.
+
+    This class organizes all configurable options into logical groups,
+    including debugging, pretty-printing, PyCharm integration, and more.
+
+    Attributes
+    ----------
+    debug : bool
+        Top-level debugging flag.
+
+    describe : Describe
+        Options for the `describe` decorator.
+
+    pretty_errors : PrettyErrors
+        Options for formatting error messages.
+
+    doctests : Doctests
+        Options that control doctest-related output.
+
+    pycharm : PyCharm
+        Configuration for PyCharm project layout.
+
+    github : Github
+        GitHub repository information for tk_utils and tk_utils_core.
+
+    dropbox : Dropbox
+        Dropbox shared folder configuration.
+
+    pp : PP
+        Pretty-printing options for debug output and internal formatting.
+
+    dependencies : list of str
+        List of external dependencies (by name or path).
+
+    Notes
+    -----
+    To temporarily modify options:
+
+    >>> with options.set_values({'debug': True}):
+    ...     some_func()
     """
     debug: bool
     describe: Describe
@@ -203,4 +321,22 @@ options = _mk_defaults()
 def configure(updates: dict):
     global options 
     options._update(updates, copy=False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
