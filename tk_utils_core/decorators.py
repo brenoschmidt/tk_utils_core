@@ -31,13 +31,16 @@ def _mk_describe_msg(
     """
     Parse and describe a callable
     """
-    msg = [f"Running {func.__qualname__}"]
 
     parsed = ParsedFunc(func)
     parts = parsed.as_ntup(dedent=True, use_doc_attr=True)
 
     if opts['show_sig'] is True:
-        msg.append(parts.sig)
+        sig = parsed.mk_sig(['name', 'parms', 'arrow', 'annotation'])
+    else:
+        sig = func.__qualname__
+    msg = [f"Running {sig}"]
+
     if opts['show_doc']:
         msg.append('Docstring:')
         msg.append(textwrap.indent(parts.doc, '    '))
