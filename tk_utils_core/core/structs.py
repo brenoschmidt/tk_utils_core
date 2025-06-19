@@ -333,6 +333,102 @@ def obj_dot_get(obj: object, attr: str) -> Any:
         obj = getattr(obj, name)
     return obj
 
+def flatten_dict(
+        obj: dict[str, Any],
+        parent_key: str = '',
+        sep: str = '.') -> dict[str, Any]:
+    """
+    Flatten a nested dictionary into a flat dictionary with dot-delimited keys.
+
+    Parameters
+    ----------
+    obj : dict of str to Any
+        A nested dictionary.
+
+    parent_key : str, optional
+        Used internally during recursion to build full keys.
+
+    sep : str, optional
+        Separator to use when joining nested keys. Default is '.'
+
+    Returns
+    -------
+    dict of str to Any
+        A flat dictionary with dot-delimited keys.
+
+    Examples
+    --------
+    >>> flatten_dict({'a': 1, 'b': {'c': 2}})
+    {'a': 1, 'b.c': 2}
+
+    >>> flatten_dict({'a': {'b': {'c': 3}}})
+    {'a.b.c': 3}
+    """
+    items = {}
+    for key, value in obj.items():
+        full_key = f"{parent_key}{sep}{key}" if parent_key else key
+        if isinstance(value, dict):
+            items.update(flatten_dict(value, full_key, sep=sep))
+        else:
+            items[full_key] = value
+    return items
+
+def unflatten_dict(
+        obj: dict[str, Any]) -> dict[str, Any]:
+    """
+    Convert a flat dictionary with dot-delimited keys into a nested dictionary.
+
+    Parameters
+    ----------
+    obj : dict of str to Any
+        A flat dictionary where some keys use dot notation to express nesting.
+
+    Returns
+    -------
+    dict of str to Any
+        A nested dictionary equivalent to the flattened input.
+
+    Raises
+    ------
+    ValueError
+        If dot-based nesting conflicts with an existing non-dict value.
+
+    Examples
+    --------
+    >>> unflatten_dict({'a': 1, 'b.c': 2})
+    {'a': 1, 'b': {'c': 2}}
+
+    >>> unflatten_dict({'a.b': 1, 'a.c': 2})
+    {'a': {'b': 1, 'c': 2}}
+
+    >>> unflatten_dict({'a': 1, 'a.b': 2})
+    Traceback (most recent call last):
+        ...
+    ValueError: Cannot nest key 'a.b' under non-dict value at 'a'
+    """
+    out = {}
+    for key, value in obj.items():
+        parts = key.split(".")
+        current = out
+        for i, part in enumerate(parts):
+            if i == len(parts) - 1:
+                if part in current and isinstance(current[part], dict):
+                    raise ValueError(
+                        f"Cannot assign value to key '{key}' because "
+                        f"a nested dict already exists at '{part}'"
+                    )
+                current[part] = value
+            else:
+                if part not in current:
+                    current[part] = {}
+                elif not isinstance(current[part], dict):
+                    raise ValueError(
+                        f"Cannot nest key '{key}' under non-dict value at '{part}'"
+                    )
+                current = current[part]
+    return out
+
+
 def obj_dot_update(
         obj: object,
         attr: str,

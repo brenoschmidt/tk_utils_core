@@ -26,6 +26,8 @@ from tk_utils_core.core.structs import (
         obj_dot_get,
         obj_dot_subset,
         obj_dot_delete,
+        unflatten_dict,
+        flatten_dict,
         )
 
 from tk_utils_core.options import options
@@ -48,5 +50,7 @@ __all__ = [
         'obj_dot_get',
         'obj_dot_subset',
         'obj_dot_delete',
+        'unflatten_dict',
+        'flatten_dict',
         ]
 
