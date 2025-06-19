@@ -9,6 +9,12 @@ import pathlib
 import sys
 
 import pydantic
+from pandas.api.types import (
+        is_numeric_dtype,
+        is_float_dtype,
+        is_integer_dtype,
+        is_datetime64_dtype,
+        )
 
 from .constants import (
         POSIX,
