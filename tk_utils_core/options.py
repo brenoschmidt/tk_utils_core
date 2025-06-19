@@ -1,9 +1,19 @@
 """ 
-Options
+Options for the tk_utils_core module
+
+Notes
+-----
+
+To temporarily modify options:
+
+> with options.updated(:
+>     options._update({'debug': True})
+>     some_func()
          
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 import tomllib
 import pathlib
 from functools import lru_cache
@@ -33,6 +43,7 @@ def load_toml_defaults(path: str | pathlib.Path) -> dict[str, Any]:
 
 class PP(BaseConfig):
     """
+    Pretty-printing options
     """
     color: TOMLStrOrNone 
     indent: str
@@ -46,6 +57,7 @@ class PP(BaseConfig):
 
 class Doctests(BaseConfig):
     """
+    Doctests options
     """
     print_docstring: bool
     print_examples: bool
@@ -56,6 +68,7 @@ class Doctests(BaseConfig):
 
 class PrettyErrors(BaseConfig):
     """
+    Configuration options for the pretty_error module
     """
     pretty_errors: bool
     line_number_first: bool
@@ -63,6 +76,7 @@ class PrettyErrors(BaseConfig):
 
 class TkUtilsGithub(BaseConfig):
     """
+    Location of the tk_utils module in Github
     """
     user: str
     repo: str
@@ -72,6 +86,7 @@ class TkUtilsGithub(BaseConfig):
 
 class TkUtilsCoreGithub(BaseConfig):
     """
+    Location of the tk_utils module in Github
     """
     user: str
     repo: str
@@ -79,6 +94,7 @@ class TkUtilsCoreGithub(BaseConfig):
 
 class Dropbox(BaseConfig):
     """
+    Dropbox shared folder URL
     """
     url: TOMLStrOrNone 
 
@@ -91,6 +107,7 @@ class Github(BaseConfig):
 
 class PyCharmPaths(BaseConfig):
     """
+    Location of files and folders in PyCharm
     """
     root: str
     backup: str
@@ -133,6 +150,47 @@ class Options(BaseConfig):
     dropbox: Dropbox
     pp: PP
     dependencies: list[str]
+
+
+    @contextmanager
+    def set_values(self, updates: dict[str, Any]):
+        """
+        Temporarily update configuration values.
+
+        Parameters
+        ----------
+        updates : dict of str to Any
+            Dictionary of keys and temporary values. Keys may use dot notation
+            for nested fields.
+
+        Yields
+        ------
+        None
+            Context where the config reflects the temporary updates.
+
+        Examples
+        --------
+        Temporarily enable debug mode:
+
+        >>> with options.set_values({'debug': True}):
+        ...     some_func()
+
+        Temporarily change a nested option:
+
+        >>> with options.set_values({'pp.color': 'red'}):
+        ...     some_func()
+
+        After the block exits, the previous values are restored:
+
+        >>> assert options.debug is False
+        >>> assert options.pp.color != 'red'
+        """
+        original = self.model_dump()
+        self._update(updates)
+        try:
+            yield
+        finally:
+            self._update(original)
 
 
 def _mk_defaults() -> Options:
