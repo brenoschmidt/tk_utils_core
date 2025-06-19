@@ -1,5 +1,5 @@
-""" 
-Parsers based on parso
+"""
+Parsers for Python functions using `parso`.
 
 """
 from __future__ import annotations
@@ -16,84 +16,91 @@ from ..messages.formatters import dedent_by
 
 class _ParsedFuncNodes:
     """
+    Extracts structural components (signature, suite, docstring, body)
+    from a `parso` function definition node.
+
+    This class is used internally by `ParsedFunc` to break down
+    the tree representation of a function into its semantic parts.
     """
+
     SIG_ATTRS = [
-            'kw_def',
-            'name',
-            'parms',
-            'arrow',
-            'annotation',
-            'colon',
-            ]
+        'kw_def',
+        'name',
+        'parms',
+        'arrow',
+        'annotation',
+        'colon',
+    ]
 
     def __init__(self, func: parso.python.tree.Function):
+        """
+        Parameters
+        ----------
+        func : parso.python.tree.Function
+            A parso Function node representing a function definition.
+        """
         self.func = func
 
     @cached_property
     def parts(self) -> namedtuple:
         """
-        A namedtuple with the function children
+        Parse and return the core components of the function signature
+        and suite as a namedtuple.
 
-        func.children can have either 4 or 6 elements:
-
-        0. <Keyword: def>
-        1. <Name>
-        2. parameter list (including open-paren and close-paren <Operator>s)
-        3. or 5. <Operator: :>
-        4. or 6. Node() representing function body
-        3. -> (if annotation is also present)
-        4. annotation (if present)
-
+        Returns
+        -------
+        namedtuple
+            A namedtuple with attributes:
+            'kw_def', 'name', 'parms', 'arrow', 'annotation',
+            'colon', 'suite'.
         """
-        # In order
-        attrs =  self.SIG_ATTRS + [
-                'suite',
-                ]
+        # order matters here
+        attrs = self.SIG_ATTRS + ['suite']
         kargs = {x: None for x in attrs}
 
         kargs.update({
             'kw_def': self.func.children[0],
             'name': self.func.children[1],
             'parms': self.func.children[2],
-            })
-        
+        })
+
         # Remaining children
         # the next element is either the : operator or -> annotation
         arr_or_colon = self.func.children[3]
-
         children = [x for x in self.func.children[4:]]
 
         if arr_or_colon.type == 'operator' and arr_or_colon.value == ':':
             kargs.update({
                 'colon': arr_or_colon,
                 'suite': children.pop(0),
-                })
+            })
         else:
             kargs.update({
-                'arrow': arr_or_colon, 
+                'arrow': arr_or_colon,
                 'annotation': children.pop(0),
-                })
+            })
             kargs['colon'] = children.pop(0)
             kargs['suite'] = children.pop(0)
 
         if len(children) > 0:
-            raise Exception(
-                    f"Function children not parsed: {children}")
+            raise Exception(f"Function children not parsed: {children}")
 
         return namedtuple('FuncParts', attrs)(**kargs)
-
 
     @cached_property
     def suite(self) -> namedtuple:
         """
+        Parse the function body suite into its components.
+
+        Returns
+        -------
+        namedtuple
+            A namedtuple with attributes:
+            'newlines', 'doc', and 'body'.
         """
         suite = self.parts.suite
 
-        attrs = [
-            'newlines',
-            'doc',
-            'body',
-            ]
+        attrs = ['newlines', 'doc', 'body']
         ntup = namedtuple('SuiteParts', attrs)
         kargs = {x: None for x in attrs}
 
@@ -101,7 +108,6 @@ class _ParsedFuncNodes:
             return ntup(**kargs)
 
         children = [x for x in suite.children]
-
 
         newlines = []
         while True and len(children) > 0:
@@ -126,6 +132,17 @@ class _ParsedFuncNodes:
 
     def mk_sig_nodes(self, attrs: list[str] | None = None):
         """
+        Return selected signature-related child nodes.
+
+        Parameters
+        ----------
+        attrs : list of str, optional
+            Subset of keys from SIG_ATTRS to include. If None, includes all.
+
+        Returns
+        -------
+        list of parso.tree.Node
+            The corresponding nodes in order.
         """
         if attrs is None:
             attrs = self.SIG_ATTRS
@@ -138,23 +155,21 @@ class _ParsedFuncNodes:
         """
         Returns
         -------
-        list[parso.tree.Node]:
-            The nodes containing the function signature,
-            excluding the docstring and body. Also include trailing
-            newlines.
+        list of parso.tree.Node
+            Nodes forming the function signature and any trailing newlines.
         """
         parts = self.mk_sig_nodes()
         if self.suite.newlines:
             parts.extend(self.suite.newlines)
         return parts
-    
+
     @cached_property
     def doc(self) -> parso.tree.Node | None:
         """
         Returns
         -------
-        parso.tree.Leaf or None:
-            Leaf with the docstring (if present)
+        parso.tree.Leaf or None
+            Node containing the docstring, if present.
         """
         return self.suite.doc
 
@@ -163,8 +178,8 @@ class _ParsedFuncNodes:
         """
         Returns
         -------
-        list[parso.tree.BaseNode] or None:
-            List of statement nodes in the body, excluding the docstring.
+        list of parso.tree.BaseNode or None
+            Function body statements, excluding the docstring.
         """
         return self.suite.body
 
@@ -173,9 +188,8 @@ class _ParsedFuncNodes:
         """
         Returns
         -------
-        list[parso.tree.Decorator] or None:
-            A list of decorator nodes if the function is decorated, 
-            otherwise None.
+        list of parso.tree.Decorator or None
+            List of decorator nodes if present.
         """
         out = self.func.get_decorators()
         return out if len(out) > 0 else None
@@ -183,9 +197,19 @@ class _ParsedFuncNodes:
 
 class _ParsedFuncCodes:
     """
+    Produces source code strings for components extracted by `_ParsedFuncNodes`.
+
+    This class provides the string equivalents of decorators, signature,
+    docstring, and body.
     """
 
     def __init__(self, nodes: _ParsedFuncNodes):
+        """
+        Parameters
+        ----------
+        nodes : _ParsedFuncNodes
+            Parsed structure of a function's components.
+        """
         self._nodes = nodes
 
     @cached_property
@@ -193,32 +217,30 @@ class _ParsedFuncCodes:
         """
         Returns
         -------
-        str:
-            Source code for all decorators, or empty string if none.
+        str
+            Concatenated decorator source code, or empty string if none.
         """
         nodes = self._nodes.decor
         return ''.join(n.get_code() for n in nodes) if nodes else ''
-
 
     @cached_property
     def sig(self) -> str:
         """
         Returns
         -------
-        str:
-            Source code for the function signature
+        str
+            Source code for the function signature and trailing newlines.
         """
         nodes = self._nodes.sig
         return ''.join(n.get_code() for n in nodes)
-
 
     @cached_property
     def doc(self) -> str:
         """
         Returns
         -------
-        str 
-            Docstring for the function
+        str
+            Docstring text, or empty string if not present.
         """
         node = self._nodes.doc
         return node.get_code() if node else ''
@@ -228,16 +250,19 @@ class _ParsedFuncCodes:
         """
         Returns
         -------
-        str:
-            Source code for the function body, excluding docstring.
+        str
+            Function body code, excluding the docstring.
         """
         nodes = self._nodes.body
         return ''.join(n.get_code() for n in nodes) if nodes else ''
 
+
 class ParsedFunc:
     """
-    An object that inspects the source code of a Python function
-    using `parso` to extract structural components.
+    Parses a Python function into structured components using `parso`.
+
+    This class allows introspection of decorators, signature, docstring,
+    and body, and provides a method to return those parts as dedented strings.
     """
 
     def __init__(
@@ -246,6 +271,24 @@ class ParsedFunc:
             name: str | None = None,
             src: str | None = None,
             ):
+        """
+        Parameters
+        ----------
+        obj : Callable, optional
+            A Python function object. If provided, `src` must be None.
+
+        name : str, optional
+            Name of the function. Required if `src` is provided.
+
+        src : str, optional
+            Source code containing a function definition. If provided,
+            `obj` must be None.
+
+        Raises
+        ------
+        ValueError
+            If both `obj` and `src` are provided or both are None.
+        """
         if obj is not None and src is not None:
             raise ValueError(
                     f"Parms `src` and `obj` cannot be both None")
@@ -257,21 +300,19 @@ class ParsedFunc:
             self.src = inspect.getsource(obj)
             self.name = self.obj.__name__
         elif name is None:
-            raise ValueError(
-                    f"Parm `name` must not be None if `src` is not None")
+            raise ValueError("Parm `name` must not be None if `src` is not None")
         else:
-            self.name = name 
+            self.name = name
             self.src = src
             self.obj = None
-
 
     @cached_property
     def tree(self) -> parso.python.tree.Module:
         """
         Returns
         -------
-        parso.python.tree.Module:
-            Parso tree starting from the module
+        parso.python.tree.Module
+            The parsed syntax tree from `parso`.
         """
         return parso.parse(self.src)
 
@@ -280,59 +321,89 @@ class ParsedFunc:
         """
         Returns
         -------
-        parso.python.tree.Function:
-            The node representing the function definition
+        parso.python.tree.Function
+            The node representing the function definition in the AST.
+
+        Raises
+        ------
+        TypeError
+            If the resolved node is not a Function.
         """
         func = next(
             node for node in self.tree.iter_funcdefs()
             if node.name.value == self.name
         )
         if not isinstance(func, parso.python.tree.Function):
-            raise TypeError(
-                    f"Could not extract Function node from tree")
+            raise TypeError("Could not extract Function node from tree")
         return func
 
     @cached_property
     def nodes(self) -> _ParsedFuncNodes:
+        """
+        Returns
+        -------
+        _ParsedFuncNodes
+            Structural components extracted from the function node.
+        """
         return _ParsedFuncNodes(func=self.func)
 
     @cached_property
     def codes(self) -> _ParsedFuncCodes:
+        """
+        Returns
+        -------
+        _ParsedFuncCodes
+            Source code strings extracted from structural nodes.
+        """
         return _ParsedFuncCodes(nodes=self.nodes)
-
 
     @cached_property
     def indent(self) -> str:
         """
-        Return a string with the indentation of the 
-        function signature
+        Returns
+        -------
+        str
+            A string with spaces representing the function's indentation.
         """
-        return ' '*self.indent_size
+        return ' ' * self.indent_size
 
     @cached_property
     def indent_size(self) -> int:
         """
-        Number of leading spaces on the line with the 'def' keyword.
+        Returns
+        -------
+        int
+            Number of leading spaces on the line containing the `def` keyword.
         """
         for line in self.codes.sig.splitlines():
             if line.strip().startswith('def'):
                 return len(line) - len(line.lstrip())
-        return 0  # fallback (shouldn't happen)
+        # The following should not happen...
+        return 0
 
     def as_ntup(
-            self, 
+            self,
             dedent: bool = True,
             use_doc_attr: bool = False,
             ) -> namedtuple:
         """
-        Namedtuple with function parts
+        Return a namedtuple with function components as strings.
+
+        Parameters
+        ----------
+        dedent : bool, default=True
+            Whether to remove the function's base indentation from each part.
+
+        use_doc_attr : bool, default=False
+            If True and a function object was provided, uses its `__doc__`
+            attribute instead of re-parsing the docstring.
+
+        Returns
+        -------
+        namedtuple
+            A namedtuple with fields: `decor`, `sig`, `doc`, `body`.
         """
-        attrs = [
-                'decor',
-                'sig',
-                'doc',
-                'body',
-                ]
+        attrs = ['decor', 'sig', 'doc', 'body']
         ntup = namedtuple('FuncParts', attrs)
         kargs = {}
         for attr in attrs:
@@ -347,10 +418,19 @@ class ParsedFunc:
 
     def mk_sig(self, attrs: list[str]) -> str:
         """
+        Return a custom signature string composed of selected attributes.
+
+        Parameters
+        ----------
+        attrs : list of str
+            Subset of attributes from the function's parsed parts to include.
+
+        Returns
+        -------
+        str
+            Concatenated source code for the selected signature nodes.
         """
         nodes = self.nodes.mk_sig_nodes(attrs)
         return ''.join(n.get_code() for n in nodes)
-
-
 
 
