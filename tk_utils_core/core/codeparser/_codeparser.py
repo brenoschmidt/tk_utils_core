@@ -5,8 +5,9 @@ Code parsers
 """
 from __future__ import annotations
 
-from ._parso import (
+from ._functions import (
         ParsedFunc,
+        ParsedFuncCode,
         )
 
 
