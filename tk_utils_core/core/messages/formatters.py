@@ -536,8 +536,6 @@ def fmt_value(
     out = representer(value)
     return fmt_str(out, **kargs) if len(kargs) > 0 else out
 
-
-
 def tdelta_to_ntup(elapsed: dt.timedelta) -> namedtuple:
     """
     Convert a timedelta into a named tuple of time components.
@@ -559,7 +557,6 @@ def tdelta_to_ntup(elapsed: dt.timedelta) -> namedtuple:
     mins, secs = divmod(rem, 60)
     ms = elapsed.microseconds  # keep as microseconds for now
     return Elapsed(days, hours, mins, secs, ms)
-
 
 def fmt_elapsed(elapsed: dt.timedelta) -> str:
     """
@@ -596,4 +593,33 @@ def fmt_now() -> str:
     """
     return dt.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 
+
+def dedent_by(text: str, n: int) -> str:
+    """
+    Remove up to `n` leading whitespace characters from each line
+    of the input text.
+
+    Parameters
+    ----------
+    text : str
+        Multiline string to process.
+    n : int
+        Number of leading whitespace characters to remove from
+        each line (if present).
+
+    Returns
+    -------
+    str
+        Dedented string with leading spaces removed from each line.
+    """
+    if not text or n == 0:
+        return text
+    lines = text.splitlines()
+    new_lines = []
+    for line in lines:
+        if len(line) >= n and line[:n].isspace():
+            new_lines.append(line[n:])
+        else:
+            new_lines.append(line)
+    return '\n'.join(new_lines)
 
