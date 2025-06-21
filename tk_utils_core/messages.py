@@ -25,6 +25,7 @@ from tk_utils_core.core.messages.formatters import (
         fmt_elapsed,
         fmt_value,
         trim_values,
+        dedent_by,
         )
 from tk_utils_core.core.messages.logtools import (
         Tee,
@@ -41,6 +42,7 @@ __all__ = [
         'align_by_char',
         'colorize',
         'decolorize',
+        'dedent_by',
         'dirtree',
         'fmt_name',
         'fmt_str',
@@ -64,6 +66,7 @@ __all__ = [
         'LogFunc',
         'logfunc',
         'CapureStdout',
+        'get_lines_between',
         ]
 
 
@@ -126,6 +129,7 @@ def fmt_msg(
         min_sep_width: int | None = None,
         max_sep_width: int | None = None,
         sep: str = '-',
+        as_list: bool = False,
         ) -> str:
     """
     Format a message string or sequence of strings for pretty display.
@@ -204,7 +208,10 @@ def fmt_msg(
     if indent:
         lines = [f"{indent}{x}" for x in lines]
 
-    return '\n'.join(lines)
+    if as_list is True:
+        return lines
+    else:
+        return '\n'.join(lines)
 
 
 def ask_yes(
@@ -265,10 +272,75 @@ def ask_yes(
         return False
     elif chk_answer == "":
         return default_yes if default_yes else ask_yes(
-            msg=None, prompt=retry_prompt,
-            color=color, strict=strict, default_yes=default_yes)
+            msg=None, 
+            prompt=retry_prompt,
+            color=color, 
+            strict=strict, 
+            default_yes=default_yes)
     else:
         return ask_yes(
-            msg=None, prompt=retry_prompt,
-            color=color, strict=strict, default_yes=default_yes)
+            msg=None, 
+            prompt=retry_prompt,
+            color=color, 
+            strict=strict, 
+            default_yes=default_yes)
 
+def get_lines_between(
+        text: str,
+        start: str,
+        end: str,
+        as_list: bool = False) -> str | list[str] | None:
+    """
+    Extract lines between `start` and `end` markers.
+
+    Parameters
+    ----------
+    text : str
+        Input string with multiple lines.
+
+    start : str
+        Marker string indicating the beginning of the block.
+
+    end : str
+        Marker string indicating the end of the block.
+
+    as_list : bool, default False
+        If True, return the extracted lines as a list of strings.
+        If False, return as a single joined string.
+
+    Returns
+    -------
+    str or list of str or None
+        Lines between the first `start` and `end` markers (exclusive).
+        Returns None if no such block is found.
+
+    Examples
+    --------
+    >>> text = '''
+    ... skip
+    ... <tag>
+    ... line 1
+    ... line 2
+    ... </tag>
+    ... after'''
+    >>> get_lines_between(text, "<tag>", "</tag>", as_list=True)
+    ['line 1', 'line 2']
+    >>> get_lines_between(text, "<tag>", "</tag>")
+    'line 1\nline 2'
+    """
+    lines = text.splitlines()
+    in_block = False
+    out = []
+
+    for line in lines:
+        if start in line:
+            in_block = True
+            continue
+        if end in line and in_block:
+            break
+        if in_block:
+            out.append(line)
+
+    if not out:
+        return None
+    return out if as_list else '\n'.join(out)
