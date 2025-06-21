@@ -1,18 +1,31 @@
 """
-Parsers for Python objects using `parso`.
+Parsers for Python objects using parso
 
 """
 from __future__ import annotations
 
+from collections import namedtuple
 from functools import cached_property
 from typing import Callable
-from collections import namedtuple
+import dataclasses as dc
 import inspect
 
 import parso
 
 from ..messages.formatters import dedent_by
 
+FUNC_SIG_ATTRS = [
+    'kw_def',
+    'name',
+    'parms',
+    'arrow',
+    'annotation',
+    'colon',
+]
+
+FuncParts = namedtuple('FuncParts', FUNC_SIG_ATTRS + ['suite'])
+ParsedFuncNtup = namedtuple('ParsedFuncNtup', ['decor', 'sig', 'doc', 'body'])
+FuncSuiteParts = namedtuple('FuncSuiteParts', ['newlines', 'doc', 'body'])
 
 class _ParsedFuncNodes:
     """
@@ -22,15 +35,6 @@ class _ParsedFuncNodes:
     This class is used internally by `ParsedFunc` to break down
     the tree representation of a function into its semantic parts.
     """
-
-    SIG_ATTRS = [
-        'kw_def',
-        'name',
-        'parms',
-        'arrow',
-        'annotation',
-        'colon',
-    ]
 
     def __init__(self, func: parso.python.tree.Function):
         """
@@ -42,20 +46,20 @@ class _ParsedFuncNodes:
         self.func = func
 
     @cached_property
-    def parts(self) -> namedtuple:
+    def parts(self) -> FuncParts:
         """
         Parse and return the core components of the function signature
         and suite as a namedtuple.
 
         Returns
         -------
-        namedtuple
+        FuncParts: 
             A namedtuple with attributes:
             'kw_def', 'name', 'parms', 'arrow', 'annotation',
             'colon', 'suite'.
         """
         # order matters here
-        attrs = self.SIG_ATTRS + ['suite']
+        attrs = FuncParts._fields
         kargs = {x: None for x in attrs}
 
         kargs.update({
@@ -85,27 +89,25 @@ class _ParsedFuncNodes:
         if len(children) > 0:
             raise Exception(f"Function children not parsed: {children}")
 
-        return namedtuple('FuncParts', attrs)(**kargs)
+        return FuncParts(**kargs)
 
     @cached_property
-    def suite(self) -> namedtuple:
+    def suite(self) -> FuncSuiteParts:
         """
         Parse the function body suite into its components.
 
         Returns
         -------
-        namedtuple
+        FuncSuiteParts
             A namedtuple with attributes:
             'newlines', 'doc', and 'body'.
         """
         suite = self.parts.suite
 
-        attrs = ['newlines', 'doc', 'body']
-        ntup = namedtuple('SuiteParts', attrs)
-        kargs = {x: None for x in attrs}
+        kargs = {x: None for x in FuncSuiteParts._fields}
 
         if suite is None:
-            return ntup(**kargs)
+            return FuncSuiteParts(**kargs)
 
         children = [x for x in suite.children]
 
@@ -128,7 +130,7 @@ class _ParsedFuncNodes:
 
         if len(children) > 0:
             kargs['body'] = children
-        return ntup(**kargs)
+        return FuncSuiteParts(**kargs)
 
     def mk_sig_nodes(self, attrs: list[str] | None = None):
         """
@@ -137,16 +139,15 @@ class _ParsedFuncNodes:
         Parameters
         ----------
         attrs : list of str, optional
-            Subset of keys from SIG_ATTRS to include. If None, includes all.
+            Subset of keys from FUNC_SIG_ATTRS to include. 
+            If None, includes all.
 
         Returns
         -------
         list of parso.tree.Node
             The corresponding nodes in order.
         """
-        if attrs is None:
-            attrs = self.SIG_ATTRS
-
+        attrs = FUNC_SIG_ATTRS if attrs is None else attrs
         parts = [getattr(self.parts, attr) for attr in attrs]
         return [x for x in parts if x]
 
@@ -264,11 +265,7 @@ class ParsedFuncCode:
     and body, and provides a method to return those parts as dedented strings.
     """
 
-    def __init__(
-            self,
-            name: str | None = None,
-            src: str | None = None,
-            ):
+    def __init__(self, name: str, src: str):
         """
         Parameters
         ----------
@@ -426,7 +423,7 @@ class ParsedFunc(ParsedFuncCode):
             self,
             dedent: bool = True,
             use_doc_attr: bool = False,
-            ) -> namedtuple:
+            ) -> ParsedFuncNtup:
         """
         Return a namedtuple with function components as strings.
 
@@ -441,13 +438,11 @@ class ParsedFunc(ParsedFuncCode):
 
         Returns
         -------
-        namedtuple
+        ParsedFuncNtup
             A namedtuple with fields: `decor`, `sig`, `doc`, `body`.
         """
-        attrs = ['decor', 'sig', 'doc', 'body']
-        ntup = namedtuple('FuncParts', attrs)
         kargs = {}
-        for attr in attrs:
+        for attr in ParsedFuncNtup._fields:
             value = getattr(self.codes, attr)
             if dedent:
                 value = dedent_by(value, self.indent_size)
@@ -455,6 +450,6 @@ class ParsedFunc(ParsedFuncCode):
 
         if use_doc_attr is True and self.obj is not None:
             kargs['doc'] = self.obj.__doc__
-        return ntup(**kargs)
+        return ParsedFuncNtup(**kargs)
 
 
