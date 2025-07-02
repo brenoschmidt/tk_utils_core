@@ -27,6 +27,34 @@ FuncParts = namedtuple('FuncParts', FUNC_SIG_ATTRS + ['suite'])
 ParsedFuncNtup = namedtuple('ParsedFuncNtup', ['decor', 'sig', 'doc', 'body'])
 FuncSuiteParts = namedtuple('FuncSuiteParts', ['newlines', 'doc', 'body'])
 
+
+
+class _BaseParsedCode:
+
+    def __init__(self, name: str, src: str):
+        """
+        Parameters
+        ----------
+        name : str
+            Name of the object
+
+        src : str
+            Source code containing the object definition
+        """
+        self.name = name
+        self.src = src
+
+    @cached_property
+    def tree(self) -> parso.python.tree.Module:
+        """
+        Returns
+        -------
+        parso.python.tree.Module
+            The parsed syntax tree from `parso`.
+        """
+        return parso.parse(self.src)
+
+
 class _ParsedFuncNodes:
     """
     Extracts structural components (signature, suite, docstring, body)
@@ -256,7 +284,7 @@ class _ParsedFuncCodes:
         nodes = self._nodes.body
         return ''.join(n.get_code() for n in nodes) if nodes else ''
 
-class ParsedFuncCode:
+class ParsedFuncCode(_BaseParsedCode):
     """
     Parses the source code of a Python function into structured components
     using `parso`.
@@ -275,18 +303,8 @@ class ParsedFuncCode:
         src : str
             Source code containing a function definition
         """
-        self.name = name
-        self.src = src
+        super().__init__(name=name, src=src)
 
-    @cached_property
-    def tree(self) -> parso.python.tree.Module:
-        """
-        Returns
-        -------
-        parso.python.tree.Module
-            The parsed syntax tree from `parso`.
-        """
-        return parso.parse(self.src)
 
     @cached_property
     def func(self) -> parso.python.tree.Function:
@@ -451,5 +469,148 @@ class ParsedFunc(ParsedFuncCode):
         if use_doc_attr is True and self.obj is not None:
             kargs['doc'] = self.obj.__doc__
         return ParsedFuncNtup(**kargs)
+
+class ModuleDefs(_BaseParsedCode):
+    """
+    Collection of definitions inside a module
+
+    Notes
+    -----
+    The base class sets the following attributes
+
+    self.name -> name
+    self.src -> src
+    self.tree -> parso.python.tree.module
+
+    """
+
+    def __init__(
+            self, 
+            name: str, 
+            src: str,
+            add_mod_prefix: bool = False):
+        """
+        Parameters
+        ----------
+        name : str
+            Name of the module
+
+        src : str
+            Source code 
+        """
+        super().__init__(name=name, src=src)
+        self.mod_prefix = name if add_mod_prefix else ''
+
+
+    def get_cls_or_func(self, node, base, prefix):
+        attrs = ['funcdef', 'classdef']
+        for child in node._search_in_scope(*attrs):
+            name = child.name.value
+            key = f"{prefix}.{name}" if prefix else name
+            base[key] = child 
+            base = self.get_cls_or_func(node=child, base=base, prefix=name)
+        return base
+
+
+    @cached_property
+    def cls_or_func_defs(self):
+        """
+        Return a dictionary mapping names to funcdef/classdef nodes
+        """
+        out = self.get_cls_or_func(
+                node=self.tree, 
+                base={}, 
+                prefix=self.mod_prefix)
+        return {x:out[x] for x in sorted(out)}
+
+    @cached_property
+    def cls_or_func_suites(self):
+        """
+        Return a dictionary mapping names to function suites (last children
+        element
+        """
+        out = {}
+        for name, node in self.cls_or_func_defs.items():
+            out[name] = node.children[-1]
+        return {x:out[x] for x in sorted(out)}
+
+    def get_imports(self, node, base, prefix):
+        """
+        Return a map between names and import nodes
+        """
+        for child in node.iter_imports():
+            for name_node in child.get_defined_names():
+                name = name_node.value
+                key = f"{prefix}.{name}" if prefix else name
+                base[key] = child
+        return base
+
+    @cached_property
+    def imports(self):
+        """
+        Return a map between names and import nodes
+        """
+        # Start with the tree
+        out = self.get_imports(
+                node=self.tree, 
+                base={}, 
+                prefix=self.mod_prefix)
+
+        # Then func/classes
+        for pfix, node in self.cls_or_func_defs.items():
+            out = out | self.get_imports(
+                    node=node, 
+                    base=out,
+                    prefix=pfix)
+        return {x:out[x] for x in sorted(out)}
+
+
+    def get_variables(self, node, base, prefix):
+        """
+        Return a map between names and variable definitions
+        """
+        if not hasattr(node, 'children'):
+            return base
+        for child in node.children:
+            if child.type == 'simple_stmt':
+                expr = child.children[0]
+                if expr.type == 'expr_stmt':
+                    lhs = expr.children[0]
+                    if lhs.type == 'name':
+                        name = lhs.value
+                        key = f"{prefix}.{name}" if prefix else name
+                        base[key] = child
+        return base
+    
+    @cached_property
+    def variables(self):
+        """
+        Return a map between names and variable definitions
+        """
+        out = self.get_variables(
+                node=self.tree, 
+                base={}, 
+                prefix=self.mod_prefix)
+
+        for pfix, node in self.cls_or_func_suites.items():
+            out = out | self.get_variables(
+                    node=node, 
+                    base=out,
+                    prefix=pfix)
+        return {x:out[x] for x in sorted(out)}
+
+    @cached_property
+    def defs(self):
+        """
+        Return a dictionary mapping names to nodes. Includes functions,
+        classes, imports, and vars
+        """
+        out = (self.cls_or_func_defs 
+               | self.imports
+               | self.variables)
+        return {x:out[x] for x in sorted(out)}
+
+
+
 
 
