@@ -604,7 +604,7 @@ class SysUtils:
 
         bk_dir = _paths.backup.joinpath(fmt_now())
 
-        msg = ["Backing up PyCharm project folder..."]
+        msg = ["Backing up PyCharm's project folder..."]
         if show_folder is True:
             # TODO: This should be generated dynamically
             msg.extend([
