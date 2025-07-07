@@ -717,7 +717,7 @@ class SysUtils:
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
 
-        print('Updating packages, please wait...')
+        print(fmt_msg('Updating packages, please wait...', as_hdr=True)
         if backup is True:
             self.backup(quiet=True)
 
@@ -725,9 +725,10 @@ class SysUtils:
         if not skip_core:
             self._reinstall_tk_utils_core()
         msg = [
-                '\n',
+                '',
                 'PLEASE START A NEW INTERACTIVE SESSION',
                 ]
+        print('')
         print(fmt_msg(msg, as_hdr=True))
 
 def create_venv(
