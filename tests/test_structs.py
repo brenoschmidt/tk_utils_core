@@ -18,6 +18,7 @@ from tk_utils_core.structs import (
         obj_dot_delete,
         unflatten_dict,
         flatten_dict,
+        AttrDict,
         )
 from tk_utils_core.options import options
 
@@ -179,6 +180,12 @@ class TestStructsMod(BaseTestCase):
         self._add_msg("Top-level attribute")
         obj_dot_delete(a, "x")
         self.assertFalse(hasattr(a, "x"))
+
+    def test_attrdict(self):
+        """
+        """
+        self._start_msg()
+        self._run_doctest(AttrDict)
 
 def main(verbosity=2, *args, **kargs):
     cls = TestStructsMod
