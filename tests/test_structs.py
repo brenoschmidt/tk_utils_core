@@ -19,6 +19,7 @@ from tk_utils_core.structs import (
         unflatten_dict,
         flatten_dict,
         AttrDict,
+        BaseDC,
         )
 from tk_utils_core.options import options
 
@@ -186,6 +187,12 @@ class TestStructsMod(BaseTestCase):
         """
         self._start_msg()
         self._run_doctest(AttrDict)
+
+    def test_basedc(self):
+        """
+        """
+        self._start_msg()
+        self._run_doctest(BaseDC)
 
 def main(verbosity=2, *args, **kargs):
     cls = TestStructsMod
