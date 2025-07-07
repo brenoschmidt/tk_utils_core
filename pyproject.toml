@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tk_utils_core"
-version = "0.2.0"
+version = "0.2.1"
 description = "Core utilities for the Toolkit for Finance course at UNSW"
 readme = "README.md"
 authors = [
