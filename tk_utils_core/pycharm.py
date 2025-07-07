@@ -716,6 +716,8 @@ class SysUtils:
         """
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
+
+        print('Updating packages, please wait...')
         if backup is True:
             self.backup(quiet=True)
 
@@ -723,7 +725,7 @@ class SysUtils:
         if not skip_core:
             self._reinstall_tk_utils_core()
         msg = [
-                '',
+                '\n',
                 'PLEASE START A NEW INTERACTIVE SESSION',
                 ]
         print(fmt_msg(msg, as_hdr=True))
