@@ -725,7 +725,11 @@ class SysUtils:
         if not skip_core:
             self._reinstall_tk_utils_core()
         print('\n')
-        print(fmt_msg('PLEASE START A NEW INTERACTIVE SESSION', as_hdr=True))
+        msg = [
+                'PLEASE START A NEW INTERACTIVE SESSION',
+                'You can do this by refreshing the PyCharm console',
+                ]
+        print(fmt_msg(msg, as_hdr=True))
 
 def create_venv(
         env_dir: str | pathlib.Path,
