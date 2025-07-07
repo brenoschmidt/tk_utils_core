@@ -717,19 +717,15 @@ class SysUtils:
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
 
-        print(fmt_msg('Updating packages, please wait...', as_hdr=True)
+        print('Updating packages, please wait...')
         if backup is True:
             self.backup(quiet=True)
 
         self._update_tk_utils()
         if not skip_core:
             self._reinstall_tk_utils_core()
-        msg = [
-                '',
-                'PLEASE START A NEW INTERACTIVE SESSION',
-                ]
-        print('')
-        print(fmt_msg(msg, as_hdr=True))
+        print('\n')
+        print(fmt_msg('PLEASE START A NEW INTERACTIVE SESSION', as_hdr=True))
 
 def create_venv(
         env_dir: str | pathlib.Path,
