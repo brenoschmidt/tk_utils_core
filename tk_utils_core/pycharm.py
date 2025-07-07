@@ -727,7 +727,7 @@ class SysUtils:
         print('\n')
         msg = [
                 'PLEASE START A NEW INTERACTIVE SESSION',
-                'You can do this by refreshing the PyCharm console',
+                '(e.g., by refreshing the PyCharm console)',
                 ]
         print(fmt_msg(msg, as_hdr=True))
 
