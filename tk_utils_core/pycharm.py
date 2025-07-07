@@ -701,13 +701,24 @@ class SysUtils:
                 ]
         run(cmd)
 
-
-    def update_tk_utils(self, skip_core: bool = False):
+    def update_tk_utils(
+            self, 
+            skip_core: bool = False,
+            backup: bool = True,
+            ):
         """
         Forcibly update tk_utils and tk_utils_core
+
+        Parameters
+        ----------
+        backup: bool, default True
+            Create a new backup automatically
         """
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_venv()
+        if backup is True:
+            self.backup(quiet=True)
+
         self._update_tk_utils()
         if not skip_core:
             self._reinstall_tk_utils_core()
