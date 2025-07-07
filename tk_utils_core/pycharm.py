@@ -382,7 +382,11 @@ class SysUtils:
 
         return tmp
 
-    def sync_dbox(self, url: str | None = None):
+    def sync_dbox(
+            self, 
+            url: str | None = None,
+            backup: bool = True,
+            ):
         """
         Download the most recent files from the shared Dropbox folder.
 
@@ -395,6 +399,8 @@ class SysUtils:
         ----------
         url : str | None
             Optional override for the Dropbox shared folder URL.
+        backup: bool, default True
+            Create a new backup automatically
 
         Raises
         ------
@@ -443,6 +449,9 @@ class SysUtils:
 
         tmp = self.mk_tmp(dst) if dst.exists() else dst
 
+        if backup is True:
+            self.backup(quiet=True)
+
         try:
             download(url, tmp)
         except Exception as e:
@@ -455,13 +464,18 @@ class SysUtils:
 
         print("Done")
 
-    def copy_new_files(self):
+    def copy_new_files(self, backup: bool = True):
         """
         Copy all new files from the shared Dropbox folder to the current
         PyCharm project folder. Only files that do not already exist will
         be copied. No files are overwritten.
 
         Prompts the user for confirmation before copying.
+
+        Parameters
+        ----------
+        backup: bool, default True
+            Create a new backup automatically
         """
         self.tkpaths.validate_tk_utils_init()
         self.tkpaths.validate_dropbox()
@@ -514,6 +528,9 @@ class SysUtils:
 
             confirmed = ask_yes("\n".join(msg))
             if confirmed:
+                if backup is True:
+                    # Automatic backup
+                    self.backup(quiet=True)
                 safe_copytree(src=dst, dst=_paths.root, dry_run=False)
                 print("Done")
 
@@ -598,7 +615,8 @@ class SysUtils:
                 f"|__ {_paths.backup.name}/",
                 f"|   |__ {bk_dir.name}/    <- New folder",
                 ])
-        print(fmt_msg(msg, as_hdr=True))
+        if quiet is False:
+            print(fmt_msg(msg, as_hdr=True))
 
         for src in _paths.root.iterdir():
             if (src.name.startswith('_') 
@@ -614,7 +632,8 @@ class SysUtils:
                           bk_dir.joinpath(src.name),
                           raise_if_exists=True)
 
-        print("Done")
+        if quiet is False:
+            print("Done")
         return
 
     def create_venv(self, force: bool = False):
