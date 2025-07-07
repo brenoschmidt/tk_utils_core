@@ -5,6 +5,7 @@ Structured data models
 from __future__ import annotations
 
 import pprint as pp
+import dataclasses as dc
 from collections.abc import MutableMapping, Mapping
 
 from pydantic import (
@@ -41,6 +42,7 @@ __all__ = [
         'BaseFrozenParms',
         'BaseModel', 
         'BaseParms',
+        'BaseDC',
         'ConfigDict',
         'Field',
         'PrivateAttr',
@@ -182,5 +184,127 @@ class AttrDict(dict):
         return pp.pformat(self, width=options.pp.width)
 
 
+@dc.dataclass(kw_only=True)
+class BaseDC:
+    """
+    Base dataclass with enhanced functionality:
+    
+    - Pretty string representation
+    - Convenience methods for dictionary conversion, field replacement,
+      and in-place updating
+    """
+
+    @classmethod
+    def _get_parm_names(
+            cls,
+            ignore_underscored: bool = False) -> list[str]:
+        """
+        Return the names of dataclass fields.
+
+        Parameters
+        ----------
+        ignore_underscored : bool, default False
+            If True, exclude names starting with an underscore.
+
+        Returns
+        -------
+        list of str
+            Names of dataclass fields.
+
+        Examples
+        --------
+        >>> @dc.dataclass
+        ... class MyDC(BaseDC):
+        ...     a: int
+        ...     _b: int = 0
+        >>> MyDC._get_parm_names()
+        ['a', '_b']
+        >>> MyDC._get_parm_names(ignore_underscored=True)
+        ['a']
+        """
+        out = [f.name for f in dc.fields(cls)]
+        if ignore_underscored:
+            out = [x for x in out if not x.startswith('_')]
+        return out
+
+    def __str__(self) -> str:
+        """
+        Pretty-formatted string representation
+        """
+        return pp.pformat(self, width=options.pp.width)
+
+    def _asdict(
+            self,
+            dict_factory: type = dict) -> dict:
+        """
+        Convert the dataclass to a dictionary
+
+        Parameters
+        ----------
+        dict_factory : type, default dict
+            Factory used to construct the output dictionary.
+
+        Returns
+        -------
+        dict
+            Dictionary representation of the dataclass.
+        """
+        return dc.asdict(self, dict_factory=dict_factory)
+
+    def _replace(self, **kargs) -> BaseDC:
+        """
+        Return a copy of the instance with specified fields replaced.
+
+        Parameters
+        ----------
+        **kargs : any
+            Fields and values to replace in the new instance.
+
+        Returns
+        -------
+        BaseDC
+            A new instance with updated fields.
+        """
+        return dc.replace(self, **kargs)
+
+    def _update(self, **kargs) -> None:
+        """
+        Update fields of the current instance in place.
+
+        Parameters
+        ----------
+        **kargs : any
+            Fields and values to update.
+
+        Raises
+        ------
+        ValueError
+            If any keyword does not match a declared dataclass field.
+
+        Examples
+        --------
+        >>> @dc.dataclass
+        ... class User(BaseDC):
+        ...     name: str
+        ...     age: int
+        >>> u = User(name='Alice', age=30)
+        >>> u._update(age=31)
+        >>> u.age
+        31
+        >>> u._update(email='alice@example.com')
+        Traceback (most recent call last):
+            ...
+        ValueError: The following are not valid parameters of User: email
+        """
+        parm_names = set(self.__class__._get_parm_names())
+        invalid = set(kargs) - parm_names
+        if invalid:
+            clsname = self.__class__.__name__
+            msg = f"The following are not valid parameters of {clsname}: "
+            msg += ', '.join(sorted(invalid))
+            raise ValueError(msg)
+
+        for k, v in kargs.items():
+            setattr(self, k, v)
 
 
