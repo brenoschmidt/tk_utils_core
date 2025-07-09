@@ -13,6 +13,7 @@ from tk_utils_core.core.validators import (
         is_float_dtype,
         is_integer_dtype,
         is_datetime64_dtype,
+        assert_file_exists,
         )
 
 __all__ = [
@@ -24,5 +25,6 @@ __all__ = [
         'is_float_dtype',
         'is_integer_dtype',
         'is_datetime64_dtype',
+        'assert_file_exists',
         ]
 
