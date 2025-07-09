@@ -99,3 +99,44 @@ def is_pydantic_model(obj) -> bool:
     """
     return isinstance(obj, pydantic.BaseModel)
 
+
+def assert_file_exists(pth: pathlib.Path | str) -> None:
+    """
+    Assert that `pth` points to an existing file.
+
+    Raises an appropriate error if the path is not a valid file.
+
+    Parameters
+    ----------
+    pth : str or pathlib.Path
+        The path to check.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the path does not exist or is a broken symlink.
+
+    IsADirectoryError
+        If the path exists but is not a file.
+    
+    Exception
+        If the path exists but is not a file or directory
+        (e.g., a device node or socket).
+    """
+    pth = pathlib.Path(pth)
+
+    if pth.is_file():
+        return
+
+    if not pth.exists():
+        if pth.is_symlink():
+            raise FileNotFoundError(f"Broken symlink: '{pth}'")
+        raise FileNotFoundError(f"File does not exist: '{pth}'")
+
+    if pth.is_dir():
+        raise IsADirectoryError(
+                f"Path is a directory, not a file: '{pth}'")
+
+    # Catch-all for sockets, devices, etc.
+    raise Exception(f"Path exists but is not a regular file: '{pth}'")
+
