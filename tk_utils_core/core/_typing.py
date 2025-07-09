@@ -51,6 +51,10 @@ import pandas as pd
 from pydantic import (
         AfterValidator,
         Field,
+        NegativeInt,
+        NonNegativeInt,
+        NonPositiveInt,
+        PositiveInt,
         )
 from pydantic.fields import (
         _Unset,
