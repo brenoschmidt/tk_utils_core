@@ -78,6 +78,10 @@ ListOfStr = Annotated[
     str | list[str] | tuple[str],
     AfterValidator(lambda x: list(x) if isinstance(x, str) else x)
 ]
+ListOfCallables = Annotated[
+    Callable | list[Callable] | tuple[Callable],
+    AfterValidator(lambda x: list([x]) if isinstance(x, Callable) else list(x))
+]
 
 # ----------------------------------------------------------------------------
 #   Custom types 
