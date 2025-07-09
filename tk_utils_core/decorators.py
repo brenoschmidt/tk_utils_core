@@ -10,7 +10,7 @@ import textwrap
 from typing import Callable
 
 from tk_utils_core.messages import fmt_msg
-from tk_utils_core.codeparser import ParsedFunc
+from tk_utils_core import codeparser
 from tk_utils_core.options import options
 
 __all__ = [
@@ -63,7 +63,7 @@ def _mk_describe_msg(
     str
         A formatted multiline string describing the function call.
     """
-    parsed = ParsedFunc(func)
+    parsed = codeparser.parso.ParsedFunc(func)
     parts = parsed.as_ntup(dedent=True, use_doc_attr=True)
 
     if opts['show_sig'] is True:

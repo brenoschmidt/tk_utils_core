@@ -14,10 +14,7 @@ from tk_utils_core.testing.unittest_runner import (
         run_tests,
         )
 
-from tk_utils_core.codeparser import (
-        ParsedFunc,
-        ModuleDefs,
-        )
+from tk_utils_core import codeparser 
 from tk_utils_core.options import options
 
 from _utils import (
@@ -27,6 +24,8 @@ from _utils import (
         ExampleObj,
         )
 
+ParsedFunc = codeparser.parso.ParsedFunc
+ModuleDefs = codeparser.parso.ModuleDefs
 
 class TestParsedFunc(BaseTestCase):
     """
