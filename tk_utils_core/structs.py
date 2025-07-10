@@ -73,8 +73,5 @@ class BaseDC(_BaseDC):
     __doc__ = _BaseDC.__doc__
 
     def __str__(self) -> str:
-        """
-        Pretty-formatted string representation
-        """
         return pp.pformat(self, width=options.pp.width)
 
