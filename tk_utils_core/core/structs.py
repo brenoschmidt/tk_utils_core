@@ -9,6 +9,7 @@ import json
 import copy as _copy
 import dataclasses as dc
 import pathlib
+import pprint as pp
 import re
 from types import SimpleNamespace
 from typing import (
@@ -84,8 +85,12 @@ class _BaseModel(BaseModel):
             raise ex(msg) from None
 
     def __str__(self):
-        fields = self.model_dump_json(indent=2)[1:-1]
-        return f"{self.__class__.__name__}({fields})"
+        try:
+            fields = self.model_dump()
+            fields = pp.pformat(fields, sort_dicts=False, indent=0)[1:-1]
+        except:
+            fields = self.model_dump_json(indent=2)[1:-1]
+        return f"{self.__class__.__name__}(\n{fields})"
 
 
     if not TYPE_CHECKING:
