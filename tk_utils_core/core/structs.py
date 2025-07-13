@@ -12,9 +12,11 @@ import pathlib
 import pprint as pp
 import re
 from types import SimpleNamespace
+import typing as tp
 from typing import (
         TYPE_CHECKING,
         Any,
+        Mapping,
         )
 
 from pydantic import (
@@ -38,7 +40,8 @@ RTYPE_ERR = re.compile(r'''
                         |_parsing
                         |type)
                         ''', re.I|re.S|re.X)
-
+                        
+RQUALIFIED = re.compile(r'\b((?:\w+\.)+)(\w+)\b')
 
 def _parse_validation_error(e: ValidationError):
     """ 
@@ -304,6 +307,68 @@ class BaseConfig(_BaseModel):
             for k, v in prior_state.items():
                 setattr(self, k, v)
         self._context_depth -= 1
+
+    @classmethod
+    def _struct_as_str(
+            cls,
+            indent: int = 0,
+            visited: set[type] = None,
+            qualify_types: bool = False,
+            ) -> str:
+        """
+        Return the structure of the model as a string
+        """
+        cls.model_rebuild(force=True)
+        visited = visited or set()
+
+        indent_str = ' ' * indent
+        lines = [f"{indent_str}{cls.__name__}:"]
+
+        if cls in visited:
+            lines.append(f"{indent_str}  <recursive reference>")
+            return '\n'.join(lines)
+
+        visited.add(cls)
+
+        for name, field in cls.model_fields.items():
+            typ = field.annotation
+            origin = tp.get_origin(typ)
+            args = tp.get_args(typ)
+            sub_indent = ' ' * (indent + 2)
+
+            def _describe_type(t) -> str:
+                if isinstance(t, type):
+                    return t.__name__
+                if getattr(t, '__name__', None):
+                    return t.__name__
+                out = str(t)
+                if not qualify_types:
+                    out = RQUALIFIED.sub(r'\2', out)
+                return out
+
+            if origin is tp.Union and any(a is type(None) for a in args):
+                real_type = [a for a in args if a is not type(None)][0]
+                lines.append(f"{sub_indent}{name}: {_describe_type(real_type)} | None")
+                if isinstance(real_type, type) and issubclass(real_type, BaseModel):
+                    lines.append(real_type._struct_as_str(indent + 4, visited))
+
+            elif origin in (list, dict, Mapping):
+                container = origin.__name__
+                inner = ", ".join(_describe_type(t) for t in args)
+                lines.append(f"{sub_indent}{name}: {container}[{inner}]")
+                for t in args:
+                    if isinstance(t, type) and issubclass(t, BaseModel):
+                        lines.append(t._struct_as_str(indent + 4, visited))
+
+            elif isinstance(typ, type) and issubclass(typ, BaseModel):
+                lines.append(f"{sub_indent}{name}: {typ.__name__}")
+                lines.append(typ._struct_as_str(indent + 4, visited))
+
+            else:
+                lines.append(f"{sub_indent}{name}: {_describe_type(typ)}")
+
+        visited.remove(cls)
+        return '\n'.join(lines)
 
 class BaseParms(BaseConfig):
     """ 
