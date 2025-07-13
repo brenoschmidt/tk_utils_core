@@ -375,6 +375,9 @@ class BaseParms(BaseConfig):
     Base model for parameters
     """
 
+    def _get_parm_names(self) -> list[str]:
+        return self.__class__.model_fields.keys()
+
 class BaseFrozenParms(_BaseModel):
     """ 
     Hashable version of BaseParms
