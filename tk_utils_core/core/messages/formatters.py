@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections import namedtuple
 from collections.abc import Sequence
 from functools import lru_cache
-import string
 import datetime as dt
 import textwrap
 from typing import (
@@ -16,21 +15,6 @@ from typing import (
         Callable,
         )
 
-def remove_punctuation(text: str, exclude: list[str] | None = None) -> str:
-    """
-    Removes all punctuation from a string except characters in `exclude`.
-    
-    Parameters:
-        text: The input string.
-        exclude: A list of punctuation characters to retain.
-    
-    Returns:
-        A string with selected punctuation removed.
-    """
-    exclude_set = set(exclude or [])
-    to_remove = ''.join(c for c in string.punctuation if c not in exclude_set)
-    table = str.maketrans('', '', to_remove)
-    return text.translate(table)
 
 @lru_cache(maxsize=4)
 def _map_justify(how: str) -> str:

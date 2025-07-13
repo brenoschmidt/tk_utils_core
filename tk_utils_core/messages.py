@@ -4,8 +4,11 @@ Utilities for representing objects as strings in diagnostic messages
 from __future__ import annotations
 
 import contextlib
+import string
 import io
 from typing import Iterable
+
+from tk_utils_core.core.converters import as_set
 
 from tk_utils_core.core.messages.errors import (
         type_err_msg,
@@ -26,7 +29,6 @@ from tk_utils_core.core.messages.formatters import (
         fmt_value,
         trim_values,
         dedent_by,
-        remove_punctuation,
         )
 from tk_utils_core.core.messages.logtools import (
         Tee,
@@ -68,9 +70,36 @@ __all__ = [
         'logfunc',
         'CapureStdout',
         'get_lines_between',
-        'remove_punctuation',
+        'replace_punctuation',
         ]
 
+
+def replace_punctuation(
+        old: str,
+        fill: str = "",
+        exclude: list[str] | None = None
+    ) -> str:
+    """
+    Replaces all punctuation characters in `text` with `fill`, except those in `exclude`.
+
+    Parameters
+    ----------
+    text : str
+        The input string.
+
+    fill : str, optional
+        The character to replace punctuation with.
+    exclude : str or iterable
+        Punctuation characters to retain as-is.
+
+    Returns
+    -------
+    str:
+        A string with punctuation replaced.
+    """
+    exclude_set = as_set(exclude, none_as_empty=True)
+    punct_to_replace = {ord(c): fill for c in string.punctuation if c not in exclude_set}
+    return text.translate(punct_to_replace)
 
 
 
