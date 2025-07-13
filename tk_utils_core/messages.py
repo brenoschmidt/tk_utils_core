@@ -26,6 +26,7 @@ from tk_utils_core.core.messages.formatters import (
         fmt_value,
         trim_values,
         dedent_by,
+        remove_punctuation,
         )
 from tk_utils_core.core.messages.logtools import (
         Tee,
@@ -67,6 +68,7 @@ __all__ = [
         'logfunc',
         'CapureStdout',
         'get_lines_between',
+        'remove_punctuation',
         ]
 
 
