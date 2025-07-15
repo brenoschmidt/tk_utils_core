@@ -75,7 +75,7 @@ __all__ = [
 
 
 def replace_punctuation(
-        old: str,
+        text: str,
         fill: str = "",
         exclude: list[str] | None = None
     ) -> str:

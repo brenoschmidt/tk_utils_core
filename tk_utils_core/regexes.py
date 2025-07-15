@@ -36,7 +36,6 @@ class Regexes:
     """ 
     Lazily compiled regular expression patterns.
     """
-    __slots__ = ()
 
     @cached_property
     def rquotes(self) -> re.Pattern:

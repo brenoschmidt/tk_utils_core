@@ -16,7 +16,6 @@ import dataclasses as dc
 from typing import Callable
 
 from .colorize import colorize, decolorize
-from ..structs import BaseParms
 
 __all__ = [
     'Tee',
