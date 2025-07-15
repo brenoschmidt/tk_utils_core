@@ -9,29 +9,30 @@ import dataclasses as dc
 from collections.abc import MutableMapping, Mapping
 
 from pydantic import (
-        PrivateAttr,
+        AfterValidator,
         BaseModel, 
         ConfigDict,
-        AfterValidator,
-        ValidationError,
         Field,
+        PrivateAttr,
+        ValidationError,
         computed_field,
         field_validator,
         model_validator,
         )
 
 from tk_utils_core.core.structs import (
+        AttrDict as _AttrDict,
         BaseConfig,
-        BaseParms,
+        BaseDC as _BaseDC,
+        BaseDataModel,
         BaseFrozenParms,
-        obj_dot_update,
+        BaseParms,
+        flatten_dict,
+        obj_dot_delete,
         obj_dot_get,
         obj_dot_subset,
-        obj_dot_delete,
+        obj_dot_update,
         unflatten_dict,
-        flatten_dict,
-        AttrDict as _AttrDict,
-        BaseDC as _BaseDC,
         )
 
 from tk_utils_core.options import options
@@ -41,10 +42,11 @@ __all__ = [
         'AfterValidator',
         'AttrDict',
         'BaseConfig',
+        'BaseDC',
+        'BaseDataModel',
         'BaseFrozenParms',
         'BaseModel', 
         'BaseParms',
-        'BaseDC',
         'ConfigDict',
         'Field',
         'PrivateAttr',

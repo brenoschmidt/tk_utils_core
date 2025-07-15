@@ -181,9 +181,9 @@ def _update_model_copy(
             d[field_name] = new_value
     return model.__class__(**d)
 
-class BaseConfig(_BaseModel):
+class BaseDataModel(_BaseModel):
     """
-    Base class for configuration models that supports recursive updates and
+    Base class for structured models that supports recursive updates and
     temporary context-based mutations.
 
     Features
@@ -194,10 +194,10 @@ class BaseConfig(_BaseModel):
 
     Examples
     --------
-    >>> class Address(BaseConfig):
+    >>> class Address(BaseDataModel):
     ...     city: str
     ...     zip: str
-    >>> class User(BaseConfig):
+    >>> class User(BaseDataModel):
     ...     name: str
     ...     age: int
     ...     address: Address
@@ -229,7 +229,6 @@ class BaseConfig(_BaseModel):
     '10001'
 
     """
-
     _context_depth: int = PrivateAttr(default=0)
     _backup_stack: list[dict[str, Any]] = PrivateAttr(default_factory=list)
 
@@ -248,13 +247,16 @@ class BaseConfig(_BaseModel):
                     validate_default=False,
                     )
 
+    def _get_parm_names(self) -> list[str]:
+        return self.__class__.model_fields.keys()
+
     def _update(
             self,
             updates: dict[str, Any],
             *,
             copy: bool = False,
             validate_updates: bool = True
-            ) -> BaseConfig | None:
+            ) -> BaseDataModel | None:
         """
         Update the model with the given key-value pairs.
 
@@ -270,7 +272,7 @@ class BaseConfig(_BaseModel):
 
         Returns
         -------
-        BaseConfig or None
+        BaseDataModel or None
             A new model instance if `copy` is True, otherwise None.
         """
         if validate_updates:
@@ -295,7 +297,7 @@ class BaseConfig(_BaseModel):
 
         return None
 
-    def __enter__(self) -> BaseConfig:
+    def __enter__(self) -> BaseDataModel:
         self._context_depth += 1
         return self
 
@@ -370,13 +372,61 @@ class BaseConfig(_BaseModel):
         visited.remove(cls)
         return '\n'.join(lines)
 
-class BaseParms(BaseConfig):
+class BaseConfig(BaseDataModel):
+    """
+    Base class for configuration models that supports recursive updates and
+    temporary context-based mutations.
+
+    Features
+    --------
+    - Enforces strict field validation and assignment.
+    - Allows in-place or copy-based updates via `_update()`.
+    - Supports temporary state changes using `with` blocks.
+
+    Examples
+    --------
+    >>> class Address(BaseConfig):
+    ...     city: str
+    ...     zip: str
+    >>> class User(BaseConfig):
+    ...     name: str
+    ...     age: int
+    ...     address: Address
+
+    >>> u = User(name='Alice', age=30, address=Address(city='NY', zip='10001'))
+
+    # In-place update
+    >>> u._update({'name': 'Bob'})
+    >>> u.name
+    'Bob'
+
+    # Copy-based update
+    >>> u2 = u._update({'name': 'Charlie', 'address': {'city': 'LA'}}, copy=True)
+    >>> u2.name
+    'Charlie'
+    >>> u2.address.city
+    'LA'
+    >>> u.name
+    'Bob'  # Original not changed
+
+    # Temporary update in a context manager
+    >>> with u:
+    ...     u._update({'name': 'Dana', 'address': {'zip': '90210'}})
+    ...     print(u.name, u.address.zip)
+    Dana 90210
+    >>> u.name  # Restored
+    'Bob'
+    >>> u.address.zip  # Restored
+    '10001'
+
+    """
+
+
+class BaseParms(BaseDataModel):
     """ 
     Base model for parameters
     """
 
-    def _get_parm_names(self) -> list[str]:
-        return self.__class__.model_fields.keys()
 
 class BaseFrozenParms(_BaseModel):
     """ 
