@@ -48,6 +48,16 @@ from tk_utils_core.structs import (
         )
 from tk_utils_core.system import run
 
+def _rename(old: pathlib.Path, new: pathlib.Path):
+    """
+    Forcibly rename a file (only relevant in non-POSIX systems)
+    """
+    if new.exists():
+        new.unlink()
+    old.rename(new)
+
+
+
 
 def has_idea_folder(pth: pathlib.Path) -> bool:
     """
@@ -460,10 +470,7 @@ class SysUtils:
             raise e
 
         if tmp != dst:
-            # This is only required in non-POSIX
-            if dst.exists():
-                dst.unlink()
-            tmp.rename(dst)
+            _rename(tmp, dst)
 
         print("Done")
 
@@ -678,7 +685,7 @@ class SysUtils:
             try:
                 tmp = self.mk_tmp(dst) if dst.exists() else dst
                 download(url, tmp)
-                tmp.rename(dst)
+                _rename(tmp, dst)
             finally:
                 if dst != tmp and tmp.exists():
                     tmp.unlink()
