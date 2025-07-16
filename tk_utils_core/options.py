@@ -21,7 +21,6 @@ from typing import Any
 from tk_utils_core.core.structs import (
         BaseConfig,
         Field,
-        unflatten_dict,
         )
 from tk_utils_core.core._typing import (
         UNSET,
@@ -271,46 +270,6 @@ class Options(BaseConfig):
     dependencies: list[str]
 
 
-    @contextmanager
-    def set_values(self, updates: dict[str, Any]):
-        """
-        Temporarily update configuration values.
-
-        Parameters
-        ----------
-        updates : dict of str to Any
-            Dictionary of keys and temporary values. Keys may use dot notation
-            for nested fields.
-
-        Yields
-        ------
-        None
-            Context where the config reflects the temporary updates.
-
-        Examples
-        --------
-        Temporarily enable debug mode:
-
-        >>> with options.set_values({'debug': True}):
-        ...     some_func()
-
-        Temporarily change a nested option:
-
-        >>> with options.set_values({'pp.color': 'red'}):
-        ...     some_func()
-
-        After the block exits, the previous values are restored:
-
-        >>> assert options.debug is False
-        >>> assert options.pp.color != 'red'
-        """
-        original = self.model_dump()
-        updates = unflatten_dict(updates)
-        self._update(updates)
-        try:
-            yield
-        finally:
-            self._update(original)
 
 
 def _mk_defaults() -> Options:
