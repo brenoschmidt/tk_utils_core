@@ -419,6 +419,12 @@ class BaseConfig(BaseDataModel):
     >>> u.address.zip  # Restored
     '10001'
 
+    >>> with u.set_values({'name': 'Dana'}):
+    ...     some_func()
+
+    Temporarily change a nested option:
+
+
     """
 
     @contextmanager
