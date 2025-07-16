@@ -460,6 +460,7 @@ class SysUtils:
             raise e
 
         if tmp != dst:
+            # This is only required in non-POSIX
             if dst.exists():
                 dst.unlink()
             tmp.rename(dst)
