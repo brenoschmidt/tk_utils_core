@@ -460,6 +460,8 @@ class SysUtils:
             raise e
 
         if tmp != dst:
+            if dst.exists():
+                dst.unlink()
             tmp.rename(dst)
 
         print("Done")
