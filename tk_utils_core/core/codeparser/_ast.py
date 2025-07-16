@@ -50,7 +50,7 @@ def get_funcs(
     def visit(node: ast.AST, parents: list[str]):
         if isinstance(node, ast.FunctionDef):
             if ignore_underscored is True and node.name.startswith('_'):
-                continue
+                return
             current_name = '.'.join(parents + [node.name])
             out[current_name] = ast.get_source_segment(cnts, node)
             new_parents = parents + [node.name]
