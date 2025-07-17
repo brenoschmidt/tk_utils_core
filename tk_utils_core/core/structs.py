@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import copy as _copy
 from contextlib import contextmanager
+from functools import cached_property
 import dataclasses as dc
 import pathlib
 import pprint as pp
@@ -44,37 +45,75 @@ RTYPE_ERR = re.compile(r'''
                         
 RQUALIFIED = re.compile(r'\b((?:\w+\.)+)(\w+)\b')
 
-def _parse_validation_error(e: ValidationError):
-    """ 
-    Returns a tuple with the exception type and the message
+
+class ValidationErrorParser:
     """
-    errors = e.errors(
-            include_url=False,
+    Validation error parser
+    """
+
+    def __init__(
+            self, 
+            model: BaseModel,
+            error: ValidationError):
+        self.error = error
+        self.model = model
+
+
+    def display_type_and_ctx(self, err) -> str:
+        """
+        """
+        out = [f"type={err['type']}"]
+        ctx = err.get('ctx')
+        if ctx:
+            out.append('{k}={v}' for k, v in ctx.items())
+        value = err.get('input')
+        if value:
+            out.append(f"input_value={value}")
+            out.append(f"input_type={type(value)}")
+        return '; '.join(out)
+            
+    def display_error(self, err) -> str:
+        loc = ' -> '.join(str(e) for e in err['loc'])
+        msg = err['msg']
+        type_and_ctx = self.display_type_and_ctx(err)
+        return f"{loc}\n {msg} ({type_and_ctx})"
+
+    @cached_property
+    def errors(self) -> list:
+        """
+        """
+        return self.error.errors(include_url=False)
+
+    @cached_property
+    def error_msg(self) -> list:
+        """
+        """
+        return '\n'.join(self.display_error(e) for e in self.errors)
+
+    @cached_property
+    def msg(self) -> str:
+        """
+        """
+        n = len(self.errors)
+        s = "" if n == 1 else "s"
+        name = self.model.__class__.__name__
+        return (
+            f'{n} validation error{s} for {name}\n{self.error_msg}'
             )
-    msgs = []
-    ex = Exception
-    parm_err = {}
-    for err in errors:
-        #msg = f"'{'.'.join(str(p) for p in err['loc'])}': {err['msg']}"
-        loc = '.'.join(str(x) for x in err['loc'][0:-1])
-        iput = err['input']
-        if iput is None:
-            key = loc
-        else:
-            key = f"{loc} = {iput}"
 
-        if key not in parm_err:
-            parm_err[key] = []
+    @cached_property
+    def ex(self) -> type:
+        """
+        """
+        ex = Exception
+        for err in self.errors:
+            err_type = err['type']
+            if RTYPE_ERR.match(err_type):
+                ex = ValueError
+            elif err_type.startswith("value"):
+                ex = ValueError
+        return ex
 
-        parm_err[key].append(err['msg'])
-
-        err_type = err['type']
-        if RTYPE_ERR.match(err_type):
-            ex = ValueError
-        elif err_type.startswith("value"):
-            ex = ValueError
-    msgs = [f"{k}: {' OR '.join(v)}" for k, v in parm_err.items()]
-    return (ex, '\n'.join(msgs))
 
 class _BaseModel(BaseModel):
     """
@@ -85,8 +124,10 @@ class _BaseModel(BaseModel):
         try:
             super().__init__(**kargs)
         except ValidationError as e:
-            (ex, msg) = _parse_validation_error(e)
-            raise ex(msg) from None
+            err = ValidationErrorParser(
+                    model=__pydantic_self__,
+                    error=e)
+            raise err.ex(err.msg) from None
 
     def __str__(self):
         try:
