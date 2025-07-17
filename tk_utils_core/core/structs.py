@@ -53,10 +53,12 @@ class ValidationErrorParser:
 
     def __init__(
             self, 
-            model: BaseModel,
-            error: ValidationError):
+            model_name: str,
+            error: ValidationError,
+            max_value_length: int = 40):
         self.error = error
-        self.model = model
+        self.model_name = model_name
+        self.max_value_length = max_value_length
 
 
     def display_type_and_ctx(self, err) -> str:
@@ -65,18 +67,27 @@ class ValidationErrorParser:
         out = [f"type={err['type']}"]
         ctx = err.get('ctx')
         if ctx:
-            out.append('{k}={v}' for k, v in ctx.items())
+            out.extend(f'{k}={v}' for k, v in ctx.items())
         value = err.get('input')
         if value:
-            out.append(f"input_value={value}")
-            out.append(f"input_type={type(value)}")
-        return '; '.join(out)
+            s = self._fmt_value(value)
+            out.append(f"input_value={s}")
+            out.append(f"input_type={type(value).__name__}")
+        return '\n'.join(f"    {x}" for x in out)
+
+
+    def _fmt_value(self, value) -> str:
+        s = str(value)
+        if len(s) > self.max_value_length:
+            s = s[:self.max_value_length] + '...'
+        return s
+
             
     def display_error(self, err) -> str:
         loc = ' -> '.join(str(e) for e in err['loc'])
         msg = err['msg']
         type_and_ctx = self.display_type_and_ctx(err)
-        return f"{loc}\n {msg} ({type_and_ctx})"
+        return f"{loc}\n {msg}\n{type_and_ctx}"
 
     @cached_property
     def errors(self) -> list:
@@ -96,9 +107,8 @@ class ValidationErrorParser:
         """
         n = len(self.errors)
         s = "" if n == 1 else "s"
-        name = self.model.__class__.__name__
         return (
-            f'{n} validation error{s} for {name}\n{self.error_msg}'
+            f'{n} validation error{s} for {self.model_name}\n{self.error_msg}'
             )
 
     @cached_property
@@ -124,10 +134,11 @@ class _BaseModel(BaseModel):
         try:
             super().__init__(**kargs)
         except ValidationError as e:
+            model_name = __pydantic_self__.__class__.__name__
             err = ValidationErrorParser(
-                    model=__pydantic_self__,
+                    model_name=model_name,
                     error=e)
-            raise err.ex(err.msg) from None
+            raise err.ex(err.msg)
 
     def __str__(self):
         try:
@@ -136,6 +147,21 @@ class _BaseModel(BaseModel):
         except:
             fields = self.model_dump_json(indent=2)[1:-1]
         return f"{self.__class__.__name__}(\n{fields})"
+
+
+    @classmethod
+    def _make(cls, parms: dict):
+        """
+        Wrapper around model validate with parsed exceptions
+        """
+        try:
+            return cls.model_validate(parms)
+        except ValidationError as e:
+            model_name = cls.__name__
+            err = ValidationErrorParser(
+                    model_name=model_name,
+                    error=e)
+            raise err.ex(err.msg)
 
 
     if not TYPE_CHECKING:
@@ -151,8 +177,14 @@ class _BaseModel(BaseModel):
                     # memoize the handler for faster access
                     self.__pydantic_setattr_handlers__[name] = setattr_handler  
             except ValidationError as e:
-                (ex, msg) = _parse_validation_error(e)
-                raise ex(msg) from None
+                model_name = self.__class__.__name__
+                err = ValidationErrorParser(
+                        model_name=model_name,
+                        error=e)
+                raise err.ex(err.msg)
+
+
+        
 
 def _validate_model_updates(model: BaseModel, updates: dict[str, Any]) -> None:
     """
@@ -413,6 +445,34 @@ class BaseDataModel(_BaseModel):
 
         visited.remove(cls)
         return '\n'.join(lines)
+
+    def _validate_attrdict_values(self):
+        """
+        Automatically validate/cast AttrDict[str, T] fields
+        so that values are instances of T.
+
+        Usage
+        -----
+        Include the following method in the subclass
+
+        @model_validator(mode='after')
+        def coerce_attrdict_values(self):
+            return self._validate_attrdict_values()
+
+        """
+        type_hints = tp.get_type_hints(type(self))
+        for field, annotation in type_hints.items():
+            origin = tp.get_origin(annotation)
+            if origin is AttrDict:
+                args = tp.get_args(annotation)
+                if len(args) == 2 and args[0] is str:
+                    value_cls = args[1]
+                    d = getattr(self, field, None)
+                    if isinstance(d, AttrDict):
+                        for k, v in d.items():
+                            if not isinstance(v, value_cls):
+                                d[k] = value_cls._make(v)
+        return self
 
 class BaseConfig(BaseDataModel):
     """
