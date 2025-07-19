@@ -25,6 +25,7 @@ import fnmatch
 import re
 from typing import Callable, Iterator, Iterable
 
+import pandas as pd
 from pydantic import field_validator
 
 from .. import (
@@ -304,6 +305,51 @@ def _walk(parms: WalkParms) -> Iterator[str | pathlib.Path]:
         return _walk_with_incl_dirs(parms, pats)
     return _walk_all_dirs(parms, pats)
 
+
+def sort_paths_dirs_first(
+        paths: list[pathlib.Path]) -> list[pathlib.Path]:
+    """
+    Sort paths with:
+    - Directories before files
+    - Lexicographic order within folders
+    - Hierarchical traversal (like `tree`)
+
+    Parameters
+    ----------
+    paths : list of Path
+        A list of Path objects (all under a common root).
+
+    Returns
+    -------
+    list of Path
+        Sorted path list (like tree, directories first).
+    """
+    path_set = set(paths)
+
+    def recurse(current: pathlib.Path) -> list[pathlib.Path]:
+        children = [p for p in paths if p.parent == current]
+        dirs = sorted([p for p in children if p.is_dir()])
+        files = sorted([p for p in children if not p.is_dir()])
+        result = []
+        for d in dirs:
+            result.append(d)
+            result.extend(recurse(d))
+        result.extend(files)
+        return result
+
+    # Start with top-level paths
+    top_level = [p for p in paths if p.parent not in path_set]
+    top_level_dirs = sorted([p for p in top_level if p.is_dir()])
+    top_level_files = sorted([p for p in top_level if not p.is_dir()])
+
+    sorted_paths = []
+    for d in top_level_dirs:
+        sorted_paths.append(d)
+        sorted_paths.extend(recurse(d))
+    sorted_paths.extend(top_level_files)
+
+    return sorted_paths
+
 def walk(
         root: str | pathlib.Path,
         parents: bool = False,
@@ -369,11 +415,7 @@ def walk(
     paths = list(_walk(parms))
 
     if dirs_first is True:
-        if as_path is False:
-            _paths = [pathlib.Path(x) for x in paths]
-        else:
-            _paths = paths
-        paths = sorted(_paths, key=lambda x: (not x.is_dir(), str(x)))
+        paths = sort_paths_dirs_first(paths=paths)
         if as_path is False:
             paths = [str(x) for x in paths]
 
