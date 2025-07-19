@@ -136,8 +136,8 @@ class DirTree:
 def dirtree(
     root: pathlib.Path,
     paths: Iterable[str | pathlib.Path],
-    dirs: Iterable[str] | None,
-    notes: dict[str, str] | None,
+    dirs: Iterable[str] | None = None,
+    notes: dict[str, str] | None = None,
     excludes: Iterable[str | pathlib.Path] | None = None,
     note_align_width: int = 0) -> str:
     """
