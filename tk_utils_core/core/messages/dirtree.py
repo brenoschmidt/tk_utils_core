@@ -121,6 +121,8 @@ class DirTree:
             The formatted directory tree.
         """
         tree = []
+        if len(self.paths) == 0:
+            return ''
         max_length = max(len(b.branch) for _, b in self.branches.items())
         max_length = min(self.note_align_width, max_length)
 
@@ -139,7 +141,7 @@ def dirtree(
     dirs: Iterable[str] | None = None,
     notes: dict[str, str] | None = None,
     excludes: Iterable[str | pathlib.Path] | None = None,
-    note_align_width: int = 0) -> str:
+    note_align_width: int = 40) -> str:
     """
     Generate a formatted directory tree string from the given paths.
 

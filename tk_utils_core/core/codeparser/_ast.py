@@ -7,7 +7,10 @@ from __future__ import annotations
 import ast
 from functools import cached_property
 
-from tk_utils_core.core.structs import AttrDict
+from tk_utils_core.core.structs import (
+        AttrDict,
+        BaseDataModel,
+        )
 from tk_utils_core.core.converters import as_set
 
 
@@ -35,6 +38,13 @@ def get_import_names(node: ast.stmt) -> list[str]:
     return names
 
 
+class ParsedFunc(BaseDataModel):
+    """
+    """
+    name: str
+    src: str
+    node: ast.AST
+
 def get_funcs(
         cnts: str, 
         tree: ast.Node | None = None, 
@@ -52,7 +62,10 @@ def get_funcs(
             if ignore_underscored is True and node.name.startswith('_'):
                 return
             current_name = '.'.join(parents + [node.name])
-            out[current_name] = ast.get_source_segment(cnts, node)
+            out[current_name] = ParsedFunc(
+                    name=current_name,
+                    src=ast.get_source_segment(cnts, node),
+                    node=node)
             new_parents = parents + [node.name]
         else:
             new_parents = parents
@@ -155,7 +168,7 @@ class ParsedModule:
             Fully qualified names of functions in the file.
         """
         return self.get_funcs(
-                ignore_underscored=self.parms.ignore_underscored)
+                ignore_underscored=self.ignore_underscored)
 
 
     @cached_property
