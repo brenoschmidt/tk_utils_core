@@ -9,7 +9,6 @@ from tk_utils_core.core.constants import (
         POSIX,
         )
 
-
 __all__ = [
         'POSIX',
         ]
